@@ -1,0 +1,245 @@
+@if (store.notFound()) {
+  <div class="card">
+    <app-empty-state [title]="i18n.t().admin.form.notFound">
+      <a app-btn variant="secondary" routerLink="/admin/questions">
+        {{ i18n.t().common.back }}
+      </a>
+    </app-empty-state>
+  </div>
+} @else if (store.loading()) {
+  <div class="space-y-4">
+    <div class="skeleton h-8 w-1/3"></div>
+    <div class="skeleton h-64"></div>
+  </div>
+} @else {
+  <app-page-header
+    [title]="
+      editId ? i18n.t().admin.form.editTitle : i18n.t().admin.form.createTitle
+    "
+  />
+
+  <form
+    class="mt-4 lg:grid lg:grid-cols-5 lg:items-start lg:gap-8"
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+  >
+    <div class="space-y-5 lg:col-span-3">
+      @if (serverBanner().length > 0) {
+        <div
+          class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          @for (msg of serverBanner(); track msg) {
+            <p>{{ msg }}</p>
+          }
+        </div>
+      }
+
+      <!-- Taxonomy -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <app-field
+          [label]="i18n.t().admin.form.subject"
+          forId="subject"
+          [required]="true"
+        >
+          <select id="subject" class="input" formControlName="subjectId">
+            <option value="">{{ i18n.t().admin.form.chooseSubject }}</option>
+            @for (s of taxonomy.subjects(); track s.id) {
+              <option [value]="s.id">{{ s.name }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field
+          [label]="i18n.t().admin.form.topic"
+          forId="topic"
+          [required]="true"
+          [error]="errorFor('topicId')"
+        >
+          <select
+            id="topic"
+            class="input"
+            formControlName="topicId"
+            [attr.disabled]="topics().length === 0 ? '' : null"
+          >
+            <option value="">{{ i18n.t().admin.form.chooseTopic }}</option>
+            @for (t of topics(); track t.id) {
+              <option [value]="t.id">{{ t.name }}</option>
+            }
+          </select>
+        </app-field>
+      </div>
+
+      <!-- Stem -->
+      <app-field
+        [label]="i18n.t().admin.form.stem"
+        forId="stem"
+        [required]="true"
+        [error]="errorFor('stem')"
+      >
+        <textarea
+          id="stem"
+          class="input min-h-24 text-base leading-relaxed"
+          formControlName="stem"
+          rows="3"
+        ></textarea>
+      </app-field>
+
+      <!-- Options + correct answer -->
+      <fieldset>
+        <legend class="label">
+          {{ i18n.t().admin.form.options }}
+          <span class="text-red-500" aria-hidden="true">*</span>
+        </legend>
+        <p class="mb-2 text-xs text-slate-500">
+          {{ i18n.t().admin.form.correctHint }}
+        </p>
+        <div class="space-y-2">
+          @for (ctrl of options.controls; track $index; let i = $index) {
+            <div>
+              <div class="flex items-center gap-3">
+                <input
+                  type="radio"
+                  formControlName="correctIndex"
+                  [value]="i"
+                  class="size-5 shrink-0 cursor-pointer accent-primary-600"
+                  [attr.aria-label]="
+                    i18n.t().admin.form.correctAnswer + ' — ' + optionLabel(i)
+                  "
+                />
+                <input
+                  type="text"
+                  class="input flex-1 text-base leading-relaxed"
+                  [formControl]="ctrl"
+                  [placeholder]="optionLabel(i)"
+                  [attr.aria-label]="optionLabel(i)"
+                />
+              </div>
+              @if (errorFor('options.' + i); as err) {
+                <p class="mt-1 ml-8 text-xs text-red-600">{{ err }}</p>
+              }
+            </div>
+          }
+        </div>
+        @if (errorFor('correctIndex'); as err) {
+          <p class="mt-2 text-xs text-red-600">
+            {{ i18n.t().admin.form.correctAnswer }}: {{ err }}
+          </p>
+        }
+      </fieldset>
+
+      <!-- Explanation -->
+      <app-field
+        [label]="i18n.t().admin.form.explanation"
+        forId="explanation"
+        [required]="true"
+        [error]="errorFor('explanation')"
+      >
+        <textarea
+          id="explanation"
+          class="input min-h-20 text-base leading-relaxed"
+          formControlName="explanation"
+          rows="2"
+        ></textarea>
+      </app-field>
+
+      <!-- Classification -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <app-field [label]="i18n.t().admin.form.difficulty" forId="difficulty">
+          <select id="difficulty" class="input" formControlName="difficulty">
+            @for (d of DIFFICULTIES; track d) {
+              <option [value]="d">{{ i18n.t().difficulty[d] }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field [label]="i18n.t().admin.form.language" forId="language">
+          <select id="language" class="input" formControlName="language">
+            @for (l of LANGUAGES; track l) {
+              <option [value]="l">{{ i18n.t().language[l] }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field [label]="i18n.t().admin.form.sourceType" forId="sourceType">
+          <select id="sourceType" class="input" formControlName="sourceType">
+            @for (s of SOURCE_TYPES; track s) {
+              <option [value]="s">{{ i18n.t().sourceType[s] }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field
+          [label]="i18n.t().admin.form.statusLabel"
+          forId="status"
+          [hint]="isAi() ? i18n.t().admin.form.publishedBlockedHint : ''"
+        >
+          <select id="status" class="input" formControlName="status">
+            @for (s of STATUSES; track s) {
+              <option [value]="s" [disabled]="s === 'PUBLISHED' && isAi()">
+                {{ i18n.t().status[s] }}
+              </option>
+            }
+          </select>
+        </app-field>
+      </div>
+
+      <!-- Past-paper provenance -->
+      @if (isPastPaper()) {
+        <div class="grid gap-4 sm:grid-cols-2">
+          <app-field
+            [label]="i18n.t().admin.form.sourceYear"
+            forId="sourceYear"
+            [required]="true"
+            [error]="errorFor('sourceYear')"
+          >
+            <input
+              id="sourceYear"
+              type="number"
+              class="input"
+              formControlName="sourceYear"
+              min="1972"
+              max="2100"
+            />
+          </app-field>
+          <app-field
+            [label]="i18n.t().admin.form.sourceExam"
+            forId="sourceExam"
+            [required]="true"
+            [error]="errorFor('sourceExam')"
+          >
+            <input
+              id="sourceExam"
+              type="text"
+              class="input"
+              formControlName="sourceExam"
+              placeholder="৩৫তম বিসিএস"
+            />
+          </app-field>
+        </div>
+      }
+
+      <!-- Sticky save bar -->
+      <div
+        class="sticky bottom-0 z-20 -mx-4 flex gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:backdrop-blur-none"
+      >
+        <a
+          app-btn
+          variant="secondary"
+          class="flex-1 md:flex-none"
+          routerLink="/admin/questions"
+        >
+          {{ i18n.t().common.cancel }}
+        </a>
+        <button
+          app-btn
+          type="submit"
+          class="flex-1 md:flex-none"
+          [loading]="store.saving()"
+        >
+          {{ i18n.t().common.save }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Live learner preview -->
+    <div class="mt-8 lg:col-span-2 lg:sticky lg:top-32 lg:mt-0">
+      <app-question-preview [question]="preview()" />
+    </div>
+  </form>
+}

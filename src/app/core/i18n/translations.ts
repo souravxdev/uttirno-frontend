@@ -75,6 +75,10 @@ const en = {
     ORIGINAL: 'Original',
     AI_GENERATED: 'AI generated',
   },
+  language: {
+    BN: 'Bangla',
+    EN: 'English',
+  },
   home: {
     apiUp: 'Connected',
     apiDown: 'Unreachable — is the backend running?',
@@ -244,6 +248,10 @@ const bn: typeof en = {
     PAST_PAPER: 'বিগত প্রশ্ন',
     ORIGINAL: 'মৌলিক',
     AI_GENERATED: 'এআই-নির্মিত',
+  },
+  language: {
+    BN: 'বাংলা',
+    EN: 'ইংরেজি',
   },
   home: {
     apiUp: 'সংযুক্ত',

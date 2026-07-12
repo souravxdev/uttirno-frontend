@@ -1,0 +1,356 @@
+<div class="space-y-4 md:space-y-6">
+  <app-page-header
+    [title]="i18n.t().admin.questions.title"
+    [subtitle]="i18n.t().admin.questions.subtitle"
+  >
+    <a actions app-btn routerLink="new">
+      {{ i18n.t().admin.questions.newQuestion }}
+    </a>
+  </app-page-header>
+
+  <!-- Filters -->
+  <div class="card p-3 md:p-4">
+    <button
+      type="button"
+      class="flex min-h-11 w-full cursor-pointer items-center justify-between text-sm font-medium text-slate-700 md:hidden"
+      (click)="filtersOpen.set(!filtersOpen())"
+    >
+      <span>
+        {{ i18n.t().common.filters }}
+        @if (store.activeFilterCount() > 0) {
+          <span
+            class="ml-1 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700"
+          >
+            {{ store.activeFilterCount() }}
+          </span>
+        }
+      </span>
+      <svg
+        class="size-4 text-slate-400 transition-transform"
+        [class.rotate-180]="filtersOpen()"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M6 9l6 6 6-6"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+
+    <div [class]="filtersClass()">
+      <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-500">
+          {{ i18n.t().admin.questions.status }}
+        </span>
+        <select
+          class="input md:w-36"
+          [value]="store.filters().status ?? ''"
+          (change)="onFilter('status', $event)"
+        >
+          <option value="">{{ i18n.t().common.all }}</option>
+          @for (s of STATUSES; track s) {
+            <option [value]="s">{{ i18n.t().status[s] }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-500">
+          {{ i18n.t().admin.questions.subject }}
+        </span>
+        <select
+          class="input md:w-40"
+          [value]="store.filters().subject ?? ''"
+          (change)="onFilter('subject', $event)"
+        >
+          <option value="">{{ i18n.t().common.all }}</option>
+          @for (s of taxonomy.subjects(); track s.id) {
+            <option [value]="s.slug">{{ s.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-500">
+          {{ i18n.t().admin.questions.topic }}
+        </span>
+        <select
+          class="input md:w-40"
+          [value]="store.filters().topic ?? ''"
+          [disabled]="!store.filters().subject"
+          (change)="onFilter('topic', $event)"
+        >
+          <option value="">{{ i18n.t().common.all }}</option>
+          @for (t of filterTopics(); track t.id) {
+            <option [value]="t.slug">{{ t.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-500">
+          {{ i18n.t().admin.questions.difficulty }}
+        </span>
+        <select
+          class="input md:w-32"
+          [value]="store.filters().difficulty ?? ''"
+          (change)="onFilter('difficulty', $event)"
+        >
+          <option value="">{{ i18n.t().common.all }}</option>
+          @for (d of DIFFICULTIES; track d) {
+            <option [value]="d">{{ i18n.t().difficulty[d] }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-500">
+          {{ i18n.t().admin.questions.sourceType }}
+        </span>
+        <select
+          class="input md:w-36"
+          [value]="store.filters().sourceType ?? ''"
+          (change)="onFilter('sourceType', $event)"
+        >
+          <option value="">{{ i18n.t().common.all }}</option>
+          @for (s of SOURCE_TYPES; track s) {
+            <option [value]="s">{{ i18n.t().sourceType[s] }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="mb-1 block text-xs font-medium text-slate-500">
+          {{ i18n.t().admin.questions.language }}
+        </span>
+        <select
+          class="input md:w-32"
+          [value]="store.filters().language ?? ''"
+          (change)="onFilter('language', $event)"
+        >
+          <option value="">{{ i18n.t().common.all }}</option>
+          @for (l of LANGUAGES; track l) {
+            <option [value]="l">{{ i18n.t().language[l] }}</option>
+          }
+        </select>
+      </label>
+
+      @if (store.activeFilterCount() > 0) {
+        <button
+          app-btn
+          type="button"
+          variant="ghost"
+          size="sm"
+          (click)="store.clearFilters()"
+        >
+          {{ i18n.t().common.clear }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- List -->
+  @if (store.loading()) {
+    <div class="space-y-3">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="skeleton h-24 md:h-16"></div>
+      }
+    </div>
+  } @else if (store.items().length === 0) {
+    <div class="card">
+      <app-empty-state
+        [title]="i18n.t().admin.questions.emptyTitle"
+        [message]="i18n.t().admin.questions.emptyMessage"
+      >
+        @if (store.activeFilterCount() > 0) {
+          <button app-btn variant="secondary" (click)="store.clearFilters()">
+            {{ i18n.t().common.clear }}
+          </button>
+        } @else {
+          <a app-btn routerLink="new">
+            {{ i18n.t().admin.questions.newQuestion }}
+          </a>
+        }
+      </app-empty-state>
+    </div>
+  } @else {
+    <!-- Desktop table -->
+    <div class="card hidden overflow-hidden md:block">
+      <table class="w-full table-fixed text-sm">
+        <thead
+          class="border-b border-slate-200 bg-slate-50 text-left text-xs tracking-wide text-slate-500 uppercase"
+        >
+          <tr>
+            <th class="w-[38%] px-4 py-3 font-medium">
+              {{ i18n.t().admin.questions.colQuestion }}
+            </th>
+            <th class="px-4 py-3 font-medium">
+              {{ i18n.t().admin.questions.colTopic }}
+            </th>
+            <th class="px-4 py-3 font-medium">
+              {{ i18n.t().admin.questions.colStatus }}
+            </th>
+            <th class="w-36 px-4 py-3 text-right font-medium">
+              {{ i18n.t().common.actions }}
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (q of store.items(); track q.id) {
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3">
+                <p class="line-clamp-2 text-base leading-relaxed break-words">
+                  {{ q.stem }}
+                </p>
+              </td>
+              <td class="px-4 py-3 text-slate-600">
+                <p class="line-clamp-1 break-words">{{ q.topic.name }}</p>
+                <p class="text-xs text-slate-400">
+                  {{ q.topic.subject.name }}
+                </p>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-1">
+                  <app-badge [tone]="statusTone(q.status)">
+                    {{ i18n.t().status[q.status] }}
+                  </app-badge>
+                  <app-badge [tone]="difficultyTone(q.difficulty)">
+                    {{ i18n.t().difficulty[q.difficulty] }}
+                  </app-badge>
+                  <app-badge [tone]="sourceTypeTone(q.sourceType)">
+                    {{ i18n.t().sourceType[q.sourceType] }}
+                  </app-badge>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end gap-1">
+                  @if (q.status !== 'PUBLISHED') {
+                    <button
+                      type="button"
+                      class="flex size-9 cursor-pointer items-center justify-center rounded-lg text-emerald-600 hover:bg-emerald-50"
+                      [attr.aria-label]="i18n.t().admin.questions.approve"
+                      [title]="i18n.t().admin.questions.approve"
+                      (click)="store.approve(q.id)"
+                    >
+                      <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M5 13l4 4L19 7"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  }
+                  <a
+                    class="flex size-9 cursor-pointer items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    [routerLink]="[q.id, 'edit']"
+                    [attr.aria-label]="i18n.t().common.edit"
+                    [title]="i18n.t().common.edit"
+                  >
+                    <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </a>
+                  <button
+                    type="button"
+                    class="flex size-9 cursor-pointer items-center justify-center rounded-lg text-red-500 hover:bg-red-50"
+                    [attr.aria-label]="i18n.t().common.delete"
+                    [title]="i18n.t().common.delete"
+                    (click)="askDelete(q)"
+                  >
+                    <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0l1 13h8l1-13"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile cards -->
+    <div class="space-y-3 md:hidden">
+      @for (q of store.items(); track q.id) {
+        <div class="card p-4">
+          <div class="flex flex-wrap gap-1.5">
+            <app-badge [tone]="statusTone(q.status)">
+              {{ i18n.t().status[q.status] }}
+            </app-badge>
+            <app-badge [tone]="difficultyTone(q.difficulty)">
+              {{ i18n.t().difficulty[q.difficulty] }}
+            </app-badge>
+            <app-badge [tone]="sourceTypeTone(q.sourceType)">
+              {{ i18n.t().sourceType[q.sourceType] }}
+            </app-badge>
+          </div>
+          <p class="mt-2 line-clamp-2 text-base leading-relaxed break-words">
+            {{ q.stem }}
+          </p>
+          <p class="mt-1 text-xs text-slate-500">
+            {{ q.topic.name }} · {{ q.topic.subject.name }}
+          </p>
+          <div class="mt-3 flex gap-1 border-t border-slate-100 pt-2">
+            @if (q.status !== 'PUBLISHED') {
+              <button
+                app-btn
+                type="button"
+                variant="ghost"
+                size="sm"
+                (click)="store.approve(q.id)"
+              >
+                {{ i18n.t().admin.questions.approve }}
+              </button>
+            }
+            <a app-btn variant="ghost" size="sm" [routerLink]="[q.id, 'edit']">
+              {{ i18n.t().common.edit }}
+            </a>
+            <button
+              type="button"
+              class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg px-3 text-sm font-medium text-red-600 hover:bg-red-50"
+              (click)="askDelete(q)"
+            >
+              {{ i18n.t().common.delete }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (store.total() > 0) {
+      <app-pagination
+        [page]="store.page()"
+        [pageSize]="store.pageSize()"
+        [total]="store.total()"
+        (pageChange)="store.setPage($event)"
+      />
+    }
+  }
+</div>
+
+<app-confirm-dialog
+  [title]="i18n.t().admin.questions.deleteTitle"
+  [message]="i18n.t().admin.questions.deleteMessage"
+  [confirmLabel]="i18n.t().common.delete"
+  (confirmed)="confirmDelete()"
+/>
