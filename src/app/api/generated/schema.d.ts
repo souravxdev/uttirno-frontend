@@ -617,6 +617,8 @@ export interface components {
             language: "BN" | "EN";
             /** @description Previously saved selection (resume support) */
             selectedIndex: number | null;
+            /** @description Marked for review (resume support) */
+            flagged: boolean;
         };
         SessionPlayStateDto: {
             id: string;
@@ -634,13 +636,16 @@ export interface components {
         };
         SaveAnswerRequestDto: {
             questionId: string;
-            /** @description null clears the selection (question counts as skipped) */
-            selectedIndex: number | null;
+            /** @description Omit to leave the selection unchanged (flag-only save); null clears it (question counts as skipped); a number sets it */
+            selectedIndex?: number | null;
+            /** @description Mark/unmark the question for review; survives resume */
+            flagged?: boolean;
             timeTakenSec?: number;
         };
         SaveAnswerResponseDto: {
             questionId: string;
             selectedIndex: number | null;
+            flagged: boolean;
             /** @description Server-computed seconds left */
             remainingSec: number;
         };
@@ -692,6 +697,7 @@ export interface components {
             /** @enum {string} */
             language: "BN" | "EN";
             selectedIndex: number | null;
+            flagged: boolean;
             correctIndex: number;
             /** @description null = skipped */
             isCorrect: boolean | null;

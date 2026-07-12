@@ -31,13 +31,17 @@ export class AppConfirmDialog {
   readonly confirmLabel = input.required<string>();
   readonly danger = input(true);
   readonly confirmed = output<void>();
+  /** Fires when dismissed without confirming (cancel button, Esc, backdrop). */
+  readonly cancelled = output<void>();
 
   protected readonly titleId = `confirm-dialog-title-${dialogSeq++}`;
+  private confirming = false;
 
   private readonly dlg =
     viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
 
   open(): void {
+    this.confirming = false;
     this.dlg().nativeElement.showModal();
   }
 
@@ -46,7 +50,13 @@ export class AppConfirmDialog {
   }
 
   protected confirm(): void {
+    this.confirming = true;
     this.close();
     this.confirmed.emit();
+  }
+
+  /** Native <dialog> close — cancel unless a confirm triggered it. */
+  protected onClose(): void {
+    if (!this.confirming) this.cancelled.emit();
   }
 }

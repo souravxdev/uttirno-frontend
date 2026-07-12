@@ -7,9 +7,10 @@ import {
 
 export interface PaletteItem {
   answered: boolean;
+  flagged: boolean;
 }
 
-/** Question number grid: answered = filled, current = ringed. */
+/** Question number grid: answered = filled, current = ringed, flagged = corner dot. */
 @Component({
   selector: 'app-exam-palette',
   templateUrl: './exam-palette.html',

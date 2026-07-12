@@ -147,6 +147,15 @@ const en = {
     palette: 'Questions',
     saveFailed: 'Could not save the answer — check your connection.',
     loadFailedTitle: 'Could not load the exam',
+    saved: 'Saved',
+    saveErrorShort: 'Not saved',
+    flag: 'Flag for review',
+    flagged: 'Flagged',
+    offlineBanner: 'You are offline — answers will sync once you reconnect.',
+    leaveTitle: 'Leave the exam?',
+    leaveMessage:
+      'Your progress is saved on the server — you can resume this exam from your history.',
+    leaveConfirm: 'Leave',
   },
   results: {
     title: 'Result',
@@ -400,6 +409,15 @@ const bn: typeof en = {
     palette: 'প্রশ্ন তালিকা',
     saveFailed: 'উত্তর সংরক্ষণ করা যায়নি — সংযোগ দেখুন।',
     loadFailedTitle: 'পরীক্ষা লোড করা যায়নি',
+    saved: 'সংরক্ষিত',
+    saveErrorShort: 'সংরক্ষণ হয়নি',
+    flag: 'পর্যালোচনার জন্য চিহ্নিত করুন',
+    flagged: 'চিহ্নিত',
+    offlineBanner: 'আপনি অফলাইন — সংযোগ ফিরলে উত্তর সিঙ্ক হবে।',
+    leaveTitle: 'পরীক্ষা ছেড়ে যাবেন?',
+    leaveMessage:
+      'আপনার অগ্রগতি সার্ভারে সংরক্ষিত — ইতিহাস থেকে এই পরীক্ষা আবার শুরু করতে পারবেন।',
+    leaveConfirm: 'ছেড়ে যান',
   },
   results: {
     title: 'ফলাফল',

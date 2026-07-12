@@ -29,6 +29,7 @@ function playState(
         options: ['ক', 'খ', 'গ', 'ঘ'],
         language: 'BN',
         selectedIndex: null,
+        flagged: false,
       },
       {
         order: 1,
@@ -37,6 +38,7 @@ function playState(
         options: ['ক', 'খ', 'গ', 'ঘ'],
         language: 'BN',
         selectedIndex: 1,
+        flagged: false,
       },
     ],
     ...overrides,
@@ -114,6 +116,70 @@ describe('ExamPlayStore', () => {
       .expectOne(`${BASE}/s1/answers`)
       .flush(null, { status: 409, statusText: 'Conflict' });
     expect(store.finished()).toBe(true);
+  });
+
+  it('retries a transient save failure and keeps the optimistic selection', () => {
+    loadSession(300);
+    store.select(2);
+    expect(store.current()!.selectedIndex).toBe(2);
+
+    // First attempt fails with a 5xx → still "saving", selection retained.
+    httpMock
+      .expectOne(`${BASE}/s1/answers`)
+      .flush(null, { status: 503, statusText: 'Unavailable' });
+    expect(store.saveState()).toBe('saving');
+    expect(store.current()!.selectedIndex).toBe(2);
+
+    // After the first backoff (1s) it retries and succeeds.
+    vi.advanceTimersByTime(1000);
+    httpMock
+      .expectOne(`${BASE}/s1/answers`)
+      .flush({ questionId: 'q0', selectedIndex: 2, flagged: false, remainingSec: 280 });
+
+    expect(store.current()!.selectedIndex).toBe(2);
+    expect(store.saveState()).toBe('saved');
+    expect(store.remainingSec()).toBe(280);
+  });
+
+  it('rolls back the optimistic selection once retries are exhausted', () => {
+    loadSession(300);
+    store.select(3); // q0 was null
+    expect(store.current()!.selectedIndex).toBe(3);
+
+    const failOnce = (): void =>
+      httpMock
+        .expectOne(`${BASE}/s1/answers`)
+        .flush(null, { status: 500, statusText: 'Server Error' });
+
+    failOnce(); // initial attempt
+    vi.advanceTimersByTime(1000);
+    failOnce(); // retry 1
+    vi.advanceTimersByTime(3000);
+    failOnce(); // retry 2
+    vi.advanceTimersByTime(9000);
+    failOnce(); // retry 3 → give up
+
+    expect(store.current()!.selectedIndex).toBeNull(); // reverted
+    expect(store.saveState()).toBe('error');
+  });
+
+  it('toggles the flag optimistically and saves it (flag-only body)', () => {
+    loadSession(300);
+    expect(store.current()!.flagged).toBe(false);
+
+    store.toggleFlag();
+    expect(store.current()!.flagged).toBe(true);
+
+    const req = httpMock.expectOne(`${BASE}/s1/answers`);
+    expect(req.request.body).toEqual({ questionId: 'q0', flagged: true });
+    req.flush({
+      questionId: 'q0',
+      selectedIndex: null,
+      flagged: true,
+      remainingSec: 300,
+    });
+    expect(store.saveState()).toBe('saved');
+    expect(store.current()!.flagged).toBe(true);
   });
 
   it('starts a CREATED session on load (resume from history)', () => {

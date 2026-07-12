@@ -2,16 +2,23 @@
   @for (item of items(); track $index; let i = $index) {
     <button
       type="button"
-      class="size-11 cursor-pointer rounded-lg border text-sm font-semibold transition-colors"
+      class="relative size-11 cursor-pointer rounded-lg border text-sm font-semibold transition-colors"
       [class]="
         (item.answered
           ? 'border-primary-600 bg-primary-600 text-white'
           : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300') +
         (i === currentIndex() ? ' ring-2 ring-primary-500 ring-offset-1' : '')
       "
+      [attr.aria-current]="i === currentIndex() ? 'true' : null"
       (click)="jump.emit(i)"
     >
       {{ i + 1 }}
+      @if (item.flagged) {
+        <span
+          class="absolute -top-1 -right-1 size-3 rounded-full border-2 border-white bg-amber-500"
+          aria-hidden="true"
+        ></span>
+      }
     </button>
   }
 </div>

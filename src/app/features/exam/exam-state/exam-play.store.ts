@@ -18,20 +18,32 @@ import {
   finalize,
   of,
   pipe,
+  retry,
   switchMap,
   tap,
+  throwError,
+  timer,
 } from 'rxjs';
 import type { Dto, SessionStatus } from '../../../core/api/api.types';
 import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { SessionsService } from '../../../core/sessions/sessions-state/sessions.service';
 import { ToastStore } from '../../../shared/ui/toast-state/toast.store';
 import {
+  SAVE_RETRY_BACKOFF_MS,
   TIMER_DANGER_SEC,
   TIMER_WARN_SEC,
+  type SaveState,
   type TimerTone,
 } from './exam.models';
 
 const TICK_MS = 500;
+
+/** saveAnswer input plus the values to roll back to if the save fails. */
+interface SaveTask {
+  body: Dto<'SaveAnswerRequestDto'>;
+  prevSelectedIndex: number | null;
+  prevFlagged: boolean;
+}
 
 interface ExamPlayState {
   sessionId: string | null;
@@ -46,6 +58,14 @@ interface ExamPlayState {
   /** Session is over (submitted/expired) — component navigates to result. */
   finished: boolean;
   loadError: boolean;
+  /** In-flight answer saves (retries included) — drives the save indicator. */
+  pendingSaves: number;
+  /** Last save terminally failed (after retries) and was rolled back. */
+  saveError: boolean;
+  /** At least one answer save has succeeded this session. */
+  everSaved: boolean;
+  /** Browser reports no network connection. */
+  offline: boolean;
 }
 
 /** Page-scoped — provided by ExamPlayerPage. */
@@ -61,6 +81,10 @@ export const ExamPlayStore = signalStore(
     submitting: false,
     finished: false,
     loadError: false,
+    pendingSaves: 0,
+    saveError: false,
+    everSaved: false,
+    offline: false,
   }),
   withComputed(({ questions, currentIndex, deadlineMs, nowMs }) => ({
     current: computed(() => questions()[currentIndex()] ?? null),
@@ -82,6 +106,14 @@ export const ExamPlayStore = signalStore(
       return sec > TIMER_DANGER_SEC ? 'warn' : 'danger';
     }),
   })),
+  withComputed(({ pendingSaves, saveError, everSaved }) => ({
+    saveState: computed((): SaveState => {
+      if (pendingSaves() > 0) return 'saving';
+      if (saveError()) return 'error';
+      if (everSaved()) return 'saved';
+      return 'idle';
+    }),
+  })),
   withMethods((store) => {
     const sessionsApi = inject(SessionsService);
     const toast = inject(ToastStore);
@@ -94,22 +126,66 @@ export const ExamPlayStore = signalStore(
         nowMs: Date.now(),
       });
 
-    const saveAnswer = rxMethod<Dto<'SaveAnswerRequestDto'>>(
+    const saveAnswer = rxMethod<SaveTask>(
       pipe(
+        tap(() =>
+          patchState(store, {
+            pendingSaves: store.pendingSaves() + 1,
+            saveError: false,
+          }),
+        ),
         // concatMap keeps saves ordered — last selection wins server-side.
-        concatMap((body) =>
+        concatMap(({ body, prevSelectedIndex, prevFlagged }) =>
           sessionsApi.saveAnswer(store.sessionId()!, body).pipe(
+            // Retry only transient failures (offline / 5xx); 4xx propagates.
+            retry({
+              count: SAVE_RETRY_BACKOFF_MS.length,
+              delay: (err: unknown, retryCount) => {
+                const status =
+                  err instanceof HttpErrorResponse ? err.status : 0;
+                const transient = status === 0 || status >= 500;
+                if (!transient) return throwError(() => err);
+                return timer(SAVE_RETRY_BACKOFF_MS[retryCount - 1]);
+              },
+            }),
             tap({
-              next: (ack) => sync(ack.remainingSec),
+              next: (ack) => {
+                sync(ack.remainingSec);
+                patchState(store, { everSaved: true });
+              },
               error: (err: unknown) => {
                 if (err instanceof HttpErrorResponse && err.status === 409) {
                   patchState(store, { finished: true }); // expired server-side
-                } else {
-                  toast.error(i18n.t().exam.saveFailed);
+                  return;
                 }
+                // Terminal failure: roll back the optimistic change, but only
+                // if a newer selection hasn't already superseded it.
+                patchState(store, {
+                  saveError: true,
+                  questions: store.questions().map((q) => {
+                    if (q.questionId !== body.questionId) return q;
+                    const rolledBack = { ...q };
+                    if (
+                      body.selectedIndex !== undefined &&
+                      q.selectedIndex === body.selectedIndex
+                    ) {
+                      rolledBack.selectedIndex = prevSelectedIndex;
+                    }
+                    if (body.flagged !== undefined && q.flagged === body.flagged) {
+                      rolledBack.flagged = prevFlagged;
+                    }
+                    return rolledBack;
+                  }),
+                });
+                toast.error(i18n.t().exam.saveFailed);
               },
             }),
             catchError(() => EMPTY),
+            finalize(() =>
+              patchState(store, {
+                pendingSaves: Math.max(0, store.pendingSaves() - 1),
+              }),
+            ),
           ),
         ),
       ),
@@ -191,7 +267,30 @@ export const ExamPlayStore = signalStore(
               i === store.currentIndex() ? { ...q, selectedIndex: index } : q,
             ),
         });
-        saveAnswer({ questionId: question.questionId, selectedIndex: index });
+        saveAnswer({
+          body: { questionId: question.questionId, selectedIndex: index },
+          prevSelectedIndex: question.selectedIndex,
+          prevFlagged: question.flagged,
+        });
+      },
+
+      /** Optimistic flag toggle + ordered server save (flag-only). */
+      toggleFlag(): void {
+        const question = store.current();
+        if (!question || store.finished() || store.sessionId() === null) return;
+        const nextFlagged = !question.flagged;
+        patchState(store, {
+          questions: store
+            .questions()
+            .map((q, i) =>
+              i === store.currentIndex() ? { ...q, flagged: nextFlagged } : q,
+            ),
+        });
+        saveAnswer({
+          body: { questionId: question.questionId, flagged: nextFlagged },
+          prevSelectedIndex: question.selectedIndex,
+          prevFlagged: question.flagged,
+        });
       },
 
       next(): void {
@@ -219,8 +318,13 @@ export const ExamPlayStore = signalStore(
   withHooks((store) => {
     let intervalId: ReturnType<typeof setInterval> | undefined;
     let autoSubmitted = false;
+    const onOnline = (): void => patchState(store, { offline: false });
+    const onOffline = (): void => patchState(store, { offline: true });
     return {
       onInit() {
+        patchState(store, { offline: !navigator.onLine });
+        window.addEventListener('online', onOnline);
+        window.addEventListener('offline', onOffline);
         intervalId = setInterval(() => {
           patchState(store, { nowMs: Date.now() });
           const deadline = store.deadlineMs();
@@ -237,6 +341,8 @@ export const ExamPlayStore = signalStore(
       },
       onDestroy() {
         clearInterval(intervalId);
+        window.removeEventListener('online', onOnline);
+        window.removeEventListener('offline', onOffline);
       },
     };
   }),

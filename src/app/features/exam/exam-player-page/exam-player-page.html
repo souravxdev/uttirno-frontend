@@ -19,29 +19,85 @@
     class="sticky top-14 z-30 -mx-4 border-b border-slate-200 bg-white/95 px-4 backdrop-blur md:-mx-6 md:px-6"
   >
     <div class="mx-auto flex h-12 max-w-2xl items-center justify-between gap-2 lg:max-w-none">
-      <span class="text-sm font-semibold tabular-nums text-slate-700">
-        {{ store.currentIndex() + 1 }} / {{ store.total() }}
-      </span>
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-semibold tabular-nums text-slate-700">
+          {{ store.currentIndex() + 1 }} / {{ store.total() }}
+        </span>
+        <!-- Save status -->
+        @switch (store.saveState()) {
+          @case ('saving') {
+            <span class="text-xs text-slate-400">{{ i18n.t().common.saving }}</span>
+          }
+          @case ('saved') {
+            <span class="text-xs text-emerald-600">{{ i18n.t().exam.saved }}</span>
+          }
+          @case ('error') {
+            <span class="text-xs font-medium text-rose-600">
+              {{ i18n.t().exam.saveErrorShort }}
+            </span>
+          }
+        }
+      </div>
+
       <app-exam-timer
         [remainingSec]="store.remainingSec()"
         [tone]="store.timerTone()"
       />
-      <button
-        app-btn
-        type="button"
-        variant="ghost"
-        size="sm"
-        class="hidden lg:inline-flex"
-        (click)="openSubmit()"
-      >
-        {{ i18n.t().exam.submit }}
-      </button>
-      <span class="text-xs text-slate-500 lg:hidden">
-        {{ store.answeredCount() }}/{{ store.total() }}
-        {{ i18n.t().exam.answered }}
-      </span>
+
+      <div class="flex items-center gap-1">
+        <!-- Flag for review -->
+        <button
+          type="button"
+          class="flex size-11 cursor-pointer items-center justify-center rounded-lg md:size-9"
+          [class]="
+            question.flagged
+              ? 'text-amber-600 hover:bg-amber-50'
+              : 'text-slate-400 hover:bg-slate-100'
+          "
+          [attr.aria-pressed]="question.flagged ? 'true' : 'false'"
+          [attr.aria-label]="i18n.t().exam.flag"
+          (click)="store.toggleFlag()"
+        >
+          <svg
+            class="size-5"
+            viewBox="0 0 24 24"
+            [attr.fill]="question.flagged ? 'currentColor' : 'none'"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 21V4h13l-2.5 4L18 12H5"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+        <button
+          app-btn
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="hidden lg:inline-flex"
+          (click)="openSubmit()"
+        >
+          {{ i18n.t().exam.submit }}
+        </button>
+      </div>
     </div>
   </div>
+
+  <!-- Offline banner -->
+  @if (store.offline()) {
+    <div
+      class="-mx-4 border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs font-medium text-amber-800 md:-mx-6 md:px-6"
+      role="status"
+    >
+      {{ i18n.t().exam.offlineBanner }}
+    </div>
+  }
+
+  <!-- Save-status announcements for assistive tech -->
+  <p class="sr-only" aria-live="polite">{{ saveAnnouncement() }}</p>
 
   <div class="lg:flex lg:justify-center lg:gap-8">
     <!-- Question area -->
@@ -214,9 +270,20 @@
 </dialog>
 
 <app-confirm-dialog
+  #submitDlg
   [title]="i18n.t().exam.submitTitle"
   [message]="submitMessage()"
   [confirmLabel]="i18n.t().exam.submit"
   [danger]="false"
   (confirmed)="store.submit()"
+/>
+
+<app-confirm-dialog
+  #leaveDlg
+  [title]="i18n.t().exam.leaveTitle"
+  [message]="i18n.t().exam.leaveMessage"
+  [confirmLabel]="i18n.t().exam.leaveConfirm"
+  [danger]="false"
+  (confirmed)="onLeaveConfirmed()"
+  (cancelled)="onLeaveCancelled()"
 />
