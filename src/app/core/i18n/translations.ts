@@ -170,6 +170,14 @@ const en = {
     newExam: 'New exam',
     expiredNote: 'Time ran out — your saved answers were scored.',
   },
+  feedback: {
+    title: 'Rate this exam',
+    prompt: 'How was your experience?',
+    commentPlaceholder: 'Anything to add? (optional)',
+    submit: 'Submit feedback',
+    thanks: 'Thanks for your feedback!',
+    error: 'Could not submit — please try again.',
+  },
   history: {
     title: 'My attempts',
     subtitle: 'Every mock exam and its score',
@@ -431,6 +439,14 @@ const bn: typeof en = {
     filterAll: 'সব',
     newExam: 'নতুন পরীক্ষা',
     expiredNote: 'সময় শেষ — সংরক্ষিত উত্তরগুলো গণনা করা হয়েছে।',
+  },
+  feedback: {
+    title: 'পরীক্ষাটি মূল্যায়ন করুন',
+    prompt: 'আপনার অভিজ্ঞতা কেমন ছিল?',
+    commentPlaceholder: 'কিছু বলতে চান? (ঐচ্ছিক)',
+    submit: 'মতামত পাঠান',
+    thanks: 'আপনার মতামতের জন্য ধন্যবাদ!',
+    error: 'পাঠানো যায়নি — আবার চেষ্টা করুন।',
   },
   history: {
     title: 'আমার পরীক্ষাগুলো',

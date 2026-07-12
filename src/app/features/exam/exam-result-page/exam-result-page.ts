@@ -15,12 +15,13 @@ import {
   ExamResultStore,
   type ResultFilter,
 } from '../exam-state/exam-result.store';
+import { FeedbackWidget } from '../feedback-widget/feedback-widget';
 
 const FILTERS: ResultFilter[] = ['all', 'correct', 'wrong', 'skipped'];
 
 @Component({
   selector: 'app-exam-result-page',
-  imports: [RouterLink, AppBadge, AppButton, QuestionReview],
+  imports: [RouterLink, AppBadge, AppButton, QuestionReview, FeedbackWidget],
   providers: [ExamResultStore],
   templateUrl: './exam-result-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

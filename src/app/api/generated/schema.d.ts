@@ -348,6 +348,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rate a finished exam session (1–5 stars, optional comment) */
+        post: operations["FeedbackController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Feedback summary + paginated list (newest first) */
+        get: operations["AdminFeedbackController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -784,6 +818,35 @@ export interface components {
              */
             failed: number;
             drafts: components["schemas"]["AdminQuestionDto"][];
+        };
+        SubmitFeedbackRequestDto: {
+            /** @example 4 */
+            rating: number;
+            /**
+             * @description Optional free-text comment
+             * @example দারুণ অভিজ্ঞতা!
+             */
+            comment?: string;
+        };
+        FeedbackDto: {
+            id: string;
+            sessionId: string;
+            rating: number;
+            comment: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AdminFeedbackListDto: {
+            /**
+             * @description Mean rating across all feedback, null when there is none
+             * @example 4.2
+             */
+            averageRating: number | null;
+            /** @description Total feedback rows */
+            total: number;
+            page: number;
+            pageSize: number;
+            items: components["schemas"]["FeedbackDto"][];
         };
     };
     responses: never;
@@ -1665,6 +1728,88 @@ export interface operations {
             };
             /** @description ANTHROPIC_API_KEY is not configured */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FeedbackController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitFeedbackRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session is not finished yet */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminFeedbackController_list: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminFeedbackListDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
