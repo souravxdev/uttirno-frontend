@@ -1,0 +1,36 @@
+<div class="flex flex-col items-center px-2 py-12 text-center md:py-24">
+  <h1 class="text-4xl font-bold text-primary-700 md:text-5xl">
+    {{ i18n.t().appTitle }}
+  </h1>
+  <p class="mt-3 max-w-md text-base text-slate-600">
+    {{ i18n.t().tagline }}
+  </p>
+
+  <div class="mt-8">
+    @if (!auth.isLoggedIn()) {
+      <a app-btn routerLink="/auth/login">{{ i18n.t().home.ctaSignIn }}</a>
+    } @else if (auth.isAdmin()) {
+      <a app-btn routerLink="/admin">{{ i18n.t().home.ctaAdmin }}</a>
+    } @else {
+      <p class="text-sm text-slate-500">{{ i18n.t().home.learnerSoon }}</p>
+    }
+  </div>
+
+  <div class="mt-16 flex items-center gap-2 text-xs text-slate-400">
+    @switch (healthKind()) {
+      @case ('checking') {
+        <span class="size-2 rounded-full bg-slate-300"></span>
+        {{ i18n.t().home.checking }}
+      }
+      @case ('up') {
+        <span class="size-2 rounded-full bg-emerald-500"></span>
+        {{ i18n.t().home.apiUp }} · {{ i18n.t().home.apiVersion }}
+        {{ healthVersion() }}
+      }
+      @case ('down') {
+        <span class="size-2 rounded-full bg-red-500"></span>
+        {{ i18n.t().home.apiDown }}
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,75 @@
+<div class="mx-auto mt-6 max-w-sm md:mt-16">
+  <form class="card p-6" [formGroup]="form" (ngSubmit)="submit()">
+    <h1 class="text-xl font-bold">{{ i18n.t().auth.registerTitle }}</h1>
+
+    @if (auth.error(); as err) {
+      <p
+        class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+      >
+        {{ i18n.t().auth[err] }}
+      </p>
+    }
+
+    <div class="mt-5 space-y-4">
+      <app-field
+        [label]="i18n.t().auth.name"
+        forId="name"
+        [hint]="i18n.t().common.optional"
+      >
+        <input
+          id="name"
+          type="text"
+          class="input"
+          formControlName="name"
+          autocomplete="name"
+        />
+      </app-field>
+      <app-field
+        [label]="i18n.t().auth.email"
+        forId="email"
+        [error]="emailError()"
+      >
+        <input
+          id="email"
+          type="email"
+          class="input"
+          formControlName="email"
+          autocomplete="email"
+        />
+      </app-field>
+      <app-field
+        [label]="i18n.t().auth.password"
+        forId="password"
+        [error]="passwordError()"
+        [hint]="i18n.t().auth.passwordMin"
+      >
+        <input
+          id="password"
+          type="password"
+          class="input"
+          formControlName="password"
+          autocomplete="new-password"
+        />
+      </app-field>
+    </div>
+
+    <button
+      app-btn
+      type="submit"
+      class="mt-6 w-full"
+      [loading]="auth.pending()"
+    >
+      {{ i18n.t().nav.register }}
+    </button>
+
+    <p class="mt-4 text-center text-sm text-slate-500">
+      {{ i18n.t().auth.haveAccount }}
+      <a
+        routerLink="/auth/login"
+        class="font-medium text-primary-700 hover:underline"
+      >
+        {{ i18n.t().nav.signIn }}
+      </a>
+    </p>
+  </form>
+</div>

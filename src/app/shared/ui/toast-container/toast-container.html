@@ -1,0 +1,28 @@
+<div
+  class="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col gap-2 sm:inset-x-auto sm:right-6 sm:w-96"
+  aria-live="polite"
+>
+  @for (toast of store.toasts(); track toast.id) {
+    <div
+      class="pointer-events-auto flex items-start gap-3 rounded-xl border-l-4 bg-white p-4 shadow-lg"
+      [class]="borderClass(toast.kind)"
+    >
+      <p class="flex-1 text-sm text-slate-800">{{ toast.message }}</p>
+      <button
+        type="button"
+        class="-m-2 flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+        [attr.aria-label]="i18n.t().common.close"
+        (click)="store.dismiss(toast.id)"
+      >
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M6 6l12 12M18 6L6 18"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+  }
+</div>

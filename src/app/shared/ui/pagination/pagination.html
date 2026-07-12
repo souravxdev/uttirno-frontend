@@ -1,0 +1,23 @@
+<div class="flex items-center justify-between gap-3">
+  <button
+    app-btn
+    type="button"
+    variant="secondary"
+    size="sm"
+    [disabled]="!canPrev()"
+    (click)="pageChange.emit(page() - 1)"
+  >
+    {{ i18n.t().common.prev }}
+  </button>
+  <p class="text-sm text-slate-500">{{ from() }}–{{ to() }} / {{ total() }}</p>
+  <button
+    app-btn
+    type="button"
+    variant="secondary"
+    size="sm"
+    [disabled]="!canNext()"
+    (click)="pageChange.emit(page() + 1)"
+  >
+    {{ i18n.t().common.next }}
+  </button>
+</div>

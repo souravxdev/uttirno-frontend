@@ -1,9 +1,71 @@
 @import 'tailwindcss';
 
+/*
+ * Uttirno design tokens.
+ *
+ * Type & rhythm conventions (apply via utilities, not component CSS):
+ * - page title: text-xl md:text-2xl font-bold
+ * - section heading: text-base font-semibold
+ * - admin body/table text: text-sm
+ * - question stems/options: text-base leading-relaxed (Bengali glyphs
+ *   are tall — never set content type tighter than leading-relaxed)
+ * - container: mx-auto max-w-6xl px-4 md:px-6
+ * - radius: rounded-xl cards, rounded-lg controls, rounded-full badges
+ * - every interactive control: min-h-11 (44px touch target)
+ *
+ * Semantic colors:
+ * - status: DRAFT slate · IN_REVIEW amber · PUBLISHED emerald
+ * - difficulty: EASY emerald · MEDIUM amber · HARD rose
+ * - source: PAST_PAPER sky · ORIGINAL slate · AI_GENERATED violet
+ * - danger red-600 · primary actions primary-600
+ */
 @theme {
   /* Latin text renders with system fonts; Bangla glyphs fall through to
      Noto Sans Bengali (loaded in index.html). */
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Noto Sans Bengali', sans-serif;
+
+  /* Brand: "uttirno teal" — deep, professional, education-appropriate. */
+  --color-primary-50: #f0faf9;
+  --color-primary-100: #d2f2ef;
+  --color-primary-200: #a8e4df;
+  --color-primary-300: #71cec8;
+  --color-primary-400: #3fb1ac;
+  --color-primary-500: #219690;
+  --color-primary-600: #157a76; /* primary buttons, active nav */
+  --color-primary-700: #12615e; /* hover, text on tinted bg */
+  --color-primary-800: #114e4c;
+  --color-primary-900: #10403f;
+  --color-primary-950: #052625;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  dialog::backdrop {
+    @apply bg-slate-900/50;
+  }
+}
+
+/* Shared component classes — global CSS keeps every Angular component
+   free of its own stylesheet (anyComponentStyle budget stays at zero). */
+@layer components {
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .input {
+    @apply block min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/30 focus:outline-none disabled:bg-slate-50 disabled:text-slate-400;
+  }
+
+  .label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-slate-200;
+  }
 }

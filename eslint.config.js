@@ -31,7 +31,9 @@ module.exports = defineConfig([
       '@angular-eslint/component-selector': [
         'error',
         {
-          type: 'element',
+          // Attribute selectors allowed for primitives that must keep
+          // native element semantics (e.g. button[app-btn]).
+          type: ['element', 'attribute'],
           prefix: 'app',
           style: 'kebab-case',
         },

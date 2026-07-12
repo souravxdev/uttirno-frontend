@@ -9,6 +9,11 @@
 - Modern control flow (@if/@for/@switch); never *ngIf/*ngFor
 - inject() over constructor injection
 - Standalone components only; zoneless change detection (no zone.js)
+- Every component lives in its own dedicated folder holding the .ts and
+  its .html template (templateUrl, never inline template strings), e.g.
+  shared/ui/button/button.ts + button.html
+- Types/interfaces live in grouped model files (e.g. ui.models.ts,
+  auth.models.ts, api.types.ts) — never declared inside component files
 
 ## API layer
 - All API types live in src/app/api/generated/ — GENERATED, never edit
