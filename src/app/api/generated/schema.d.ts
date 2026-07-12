@@ -89,6 +89,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/taxonomy/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exam → subject → topic tree with published-question counts */
+        get: operations["TaxonomyController_getTree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Browse PUBLISHED questions (learner view — no answers, no explanations) */
+        get: operations["QuestionsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List questions (any status, includes answers) */
+        get: operations["AdminQuestionsController_list"];
+        put?: never;
+        /** Create a question (invariants zod-enforced) */
+        post: operations["AdminQuestionsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/questions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Question detail (includes answer key) */
+        get: operations["AdminQuestionsController_findOne"];
+        put?: never;
+        post?: never;
+        /** Delete a question */
+        delete: operations["AdminQuestionsController_remove"];
+        options?: never;
+        head?: never;
+        /** Update a question — merged entity is re-validated against invariants */
+        patch: operations["AdminQuestionsController_update"];
+        trace?: never;
+    };
+    "/api/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Attempt history (own sessions, newest first) */
+        get: operations["QuizSessionsController_history"];
+        put?: never;
+        /** Create a mock exam session (snapshots N random PUBLISHED questions; clock not started) */
+        post: operations["QuizSessionsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Session summary (any status) */
+        get: operations["QuizSessionsController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start the clock (CREATED → IN_PROGRESS) */
+        post: operations["QuizSessionsController_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{id}/play": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Play state for the exam player (questions WITHOUT answers, saved selections, server clock) — resume-safe */
+        get: operations["QuizSessionsController_play"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Save one answer (server-side persistence on every selection) */
+        patch: operations["QuizSessionsController_saveAnswer"];
+        trace?: never;
+    };
+    "/api/sessions/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit and score (server-side, 0.50 negative marking) — first reveal of answers */
+        post: operations["QuizSessionsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sessions/{id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Full result with correct answers and explanations */
+        get: operations["QuizSessionsController_result"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -150,6 +341,302 @@ export interface components {
             /** @description Refresh token from register/login/refresh */
             refreshToken: string;
         };
+        TopicTreeDto: {
+            id: string;
+            /** @example sahitto */
+            slug: string;
+            /** @example সাহিত্য */
+            name: string;
+            /** @example 1 */
+            order: number;
+            /**
+             * @description Number of PUBLISHED questions in this topic
+             * @example 2
+             */
+            publishedQuestionCount: number;
+        };
+        SubjectTreeDto: {
+            id: string;
+            /** @example bangla */
+            slug: string;
+            /** @example বাংলা */
+            name: string;
+            /** @example 1 */
+            order: number;
+            topics: components["schemas"]["TopicTreeDto"][];
+        };
+        ExamTreeDto: {
+            id: string;
+            /** @example bcs-preliminary */
+            slug: string;
+            /** @example বিসিএস প্রিলিমিনারি */
+            name: string;
+            subjects: components["schemas"]["SubjectTreeDto"][];
+        };
+        SubjectRefDto: {
+            id: string;
+            /** @example bangla */
+            slug: string;
+            /** @example বাংলা */
+            name: string;
+        };
+        TopicRefDto: {
+            id: string;
+            /** @example sahitto */
+            slug: string;
+            /** @example সাহিত্য */
+            name: string;
+            subject: components["schemas"]["SubjectRefDto"];
+        };
+        PublicQuestionDto: {
+            id: string;
+            /** @example 'সোনার তরী' কাব্যগ্রন্থের রচয়িতা কে? */
+            stem: string;
+            options: string[];
+            /** @enum {string} */
+            difficulty: "EASY" | "MEDIUM" | "HARD";
+            /** @enum {string} */
+            sourceType: "PAST_PAPER" | "ORIGINAL" | "AI_GENERATED";
+            /** @example 2015 */
+            sourceYear: number | null;
+            /** @example ৩৫তম বিসিএস */
+            sourceExam: string | null;
+            /** @enum {string} */
+            language: "BN" | "EN";
+            topic: components["schemas"]["TopicRefDto"];
+        };
+        PublicQuestionListDto: {
+            items: components["schemas"]["PublicQuestionDto"][];
+            /** @example 8 */
+            total: number;
+            /** @example 1 */
+            page: number;
+            /** @example 20 */
+            pageSize: number;
+        };
+        AdminQuestionDto: {
+            id: string;
+            /** @example 'সোনার তরী' কাব্যগ্রন্থের রচয়িতা কে? */
+            stem: string;
+            options: string[];
+            /** @enum {string} */
+            difficulty: "EASY" | "MEDIUM" | "HARD";
+            /** @enum {string} */
+            sourceType: "PAST_PAPER" | "ORIGINAL" | "AI_GENERATED";
+            /** @example 2015 */
+            sourceYear: number | null;
+            /** @example ৩৫তম বিসিএস */
+            sourceExam: string | null;
+            /** @enum {string} */
+            language: "BN" | "EN";
+            topic: components["schemas"]["TopicRefDto"];
+            correctIndex: number;
+            explanation: string;
+            /** @enum {string} */
+            status: "DRAFT" | "IN_REVIEW" | "PUBLISHED";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AdminQuestionListDto: {
+            items: components["schemas"]["AdminQuestionDto"][];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        QuestionCreateRequestDto: {
+            topicId: string;
+            /** @example বাংলা ভাষার প্রাচীনতম নিদর্শন কোনটি? */
+            stem: string;
+            options: string[];
+            correctIndex: number;
+            explanation: string;
+            /**
+             * @default MEDIUM
+             * @enum {string}
+             */
+            difficulty: "EASY" | "MEDIUM" | "HARD";
+            /** @enum {string} */
+            sourceType: "PAST_PAPER" | "ORIGINAL" | "AI_GENERATED";
+            /** @example 2017 */
+            sourceYear?: number;
+            /** @example ৩৮তম বিসিএস */
+            sourceExam?: string;
+            /**
+             * @default DRAFT
+             * @enum {string}
+             */
+            status: "DRAFT" | "IN_REVIEW" | "PUBLISHED";
+            /** @enum {string} */
+            language: "BN" | "EN";
+        };
+        QuestionUpdateRequestDto: {
+            topicId?: string;
+            stem?: string;
+            options?: string[];
+            correctIndex?: number;
+            explanation?: string;
+            /** @enum {string} */
+            difficulty?: "EASY" | "MEDIUM" | "HARD";
+            /** @enum {string} */
+            sourceType?: "PAST_PAPER" | "ORIGINAL" | "AI_GENERATED";
+            sourceYear?: number;
+            sourceExam?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "IN_REVIEW" | "PUBLISHED";
+            /** @enum {string} */
+            language?: "BN" | "EN";
+        };
+        SessionSummaryDto: {
+            id: string;
+            /** @enum {string} */
+            status: "CREATED" | "IN_PROGRESS" | "SUBMITTED" | "EXPIRED";
+            questionCount: number;
+            timeLimitSec: number;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            expiresAt: string | null;
+            /** Format: date-time */
+            submittedAt: string | null;
+            /**
+             * @description Final score — present only after SUBMITTED/EXPIRED
+             * @example 6.5
+             */
+            score: number | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        SessionHistoryDto: {
+            items: components["schemas"]["SessionSummaryDto"][];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        CreateSessionRequestDto: {
+            /** @example 10 */
+            questionCount: number;
+            /**
+             * @description Exam duration in seconds
+             * @example 600
+             */
+            timeLimitSec: number;
+            /**
+             * @description Restrict questions to these subject slugs
+             * @example [
+             *       "bangla",
+             *       "general-knowledge"
+             *     ]
+             */
+            subjects?: string[];
+        };
+        SessionQuestionDto: {
+            /** @example 0 */
+            order: number;
+            questionId: string;
+            /** @example 'সোনার তরী' কাব্যগ্রন্থের রচয়িতা কে? */
+            stem: string;
+            options: string[];
+            /** @enum {string} */
+            language: "BN" | "EN";
+            /** @description Previously saved selection (resume support) */
+            selectedIndex: number | null;
+        };
+        SessionPlayStateDto: {
+            id: string;
+            /** @enum {string} */
+            status: "CREATED" | "IN_PROGRESS" | "SUBMITTED" | "EXPIRED";
+            questionCount: number;
+            timeLimitSec: number;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            expiresAt: string | null;
+            /** @description Server-computed seconds left; null while CREATED */
+            remainingSec: number | null;
+            questions: components["schemas"]["SessionQuestionDto"][];
+        };
+        SaveAnswerRequestDto: {
+            questionId: string;
+            /** @description null clears the selection (question counts as skipped) */
+            selectedIndex: number | null;
+            timeTakenSec?: number;
+        };
+        SaveAnswerResponseDto: {
+            questionId: string;
+            selectedIndex: number | null;
+            /** @description Server-computed seconds left */
+            remainingSec: number;
+        };
+        SessionResultTotalsDto: {
+            /** @example 7 */
+            correct: number;
+            /** @example 2 */
+            wrong: number;
+            /** @example 1 */
+            skipped: number;
+            /**
+             * @description correct × 1.00
+             * @example 7
+             */
+            positiveMarks: number;
+            /**
+             * @description wrong × 0.50
+             * @example 1
+             */
+            negativeMarks: number;
+            /**
+             * @description positiveMarks − negativeMarks
+             * @example 6
+             */
+            score: number;
+        };
+        SubjectBreakdownDto: {
+            /** @example bangla */
+            subjectSlug: string;
+            /** @example বাংলা */
+            subjectName: string;
+            /** @example 3 */
+            correct: number;
+            /** @example 1 */
+            wrong: number;
+            /** @example 0 */
+            skipped: number;
+            /**
+             * @description correct − wrong × 0.50
+             * @example 2.5
+             */
+            score: number;
+        };
+        SessionResultItemDto: {
+            order: number;
+            questionId: string;
+            stem: string;
+            options: string[];
+            /** @enum {string} */
+            language: "BN" | "EN";
+            selectedIndex: number | null;
+            correctIndex: number;
+            /** @description null = skipped */
+            isCorrect: boolean | null;
+            explanation: string;
+        };
+        SessionResultDto: {
+            id: string;
+            /** @enum {string} */
+            status: "CREATED" | "IN_PROGRESS" | "SUBMITTED" | "EXPIRED";
+            questionCount: number;
+            timeLimitSec: number;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** Format: date-time */
+            submittedAt: string | null;
+            totals: components["schemas"]["SessionResultTotalsDto"];
+            /** @description Per-subject performance, ordered by subject order */
+            subjectBreakdown: components["schemas"]["SubjectBreakdownDto"][];
+            items: components["schemas"]["SessionResultItemDto"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -206,6 +693,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthController_login: {
@@ -231,6 +725,13 @@ export interface operations {
             };
             /** @description Invalid email or password */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit exceeded */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -266,6 +767,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthController_me: {
@@ -287,6 +795,539 @@ export interface operations {
             };
             /** @description Missing or invalid access token */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TaxonomyController_getTree: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExamTreeDto"][];
+                };
+            };
+        };
+    };
+    QuestionsController_list: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+                difficulty?: "EASY" | "MEDIUM" | "HARD";
+                language?: "BN" | "EN";
+                sourceType?: "PAST_PAPER" | "ORIGINAL" | "AI_GENERATED";
+                year?: number;
+                /** @description Topic slug */
+                topic?: unknown;
+                /** @description Subject slug */
+                subject?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicQuestionListDto"];
+                };
+            };
+        };
+    };
+    AdminQuestionsController_list: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+                difficulty?: "EASY" | "MEDIUM" | "HARD";
+                language?: "BN" | "EN";
+                sourceType?: "PAST_PAPER" | "ORIGINAL" | "AI_GENERATED";
+                year?: number;
+                /** @description Topic slug */
+                topic?: unknown;
+                /** @description Subject slug */
+                subject?: unknown;
+                topicId?: unknown;
+                status?: "DRAFT" | "IN_REVIEW" | "PUBLISHED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminQuestionListDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminQuestionsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionCreateRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminQuestionDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminQuestionsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminQuestionDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Question not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminQuestionsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Question not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Question has recorded answers and cannot be deleted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminQuestionsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionUpdateRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminQuestionDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Question not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuizSessionsController_history: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionHistoryDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuizSessionsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSessionRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionSummaryDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuizSessionsController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionSummaryDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuizSessionsController_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionPlayStateDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session has already been started */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuizSessionsController_play: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionPlayStateDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session has ended — fetch the result */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuizSessionsController_saveAnswer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAnswerRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveAnswerResponseDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session is not accepting answers */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuizSessionsController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResultDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session already submitted / not started */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    QuizSessionsController_result: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResultDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Results are available only after submission */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
