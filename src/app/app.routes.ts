@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from './core/auth/auth.guards';
+import { adminGuard, authGuard } from './core/auth/auth.guards';
 
 export const routes: Routes = [
   {
@@ -22,6 +22,23 @@ export const routes: Routes = [
       ),
     title: 'Uttirno · Register',
   },
+  {
+    path: 'browse',
+    loadComponent: () =>
+      import('./features/browse/browse-page/browse-page').then(
+        (m) => m.BrowsePage,
+      ),
+    title: 'Uttirno · Browse',
+  },
+  {
+    path: 'practice',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/practice/practice.routes').then(
+        (m) => m.PRACTICE_ROUTES,
+      ),
+  },
+  // /exam and /history routes land with their features (portions B and C).
   {
     path: 'admin',
     canActivate: [adminGuard],

@@ -29,8 +29,8 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('header')?.textContent).toContain('উত্তীর্ণ');
-    expect(compiled.querySelector('header a[app-btn]')?.textContent).toContain(
-      'Sign in',
-    );
+    expect(
+      compiled.querySelector('header a[href="/auth/login"]')?.textContent,
+    ).toContain('Sign in');
   });
 });

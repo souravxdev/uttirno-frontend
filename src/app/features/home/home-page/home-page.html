@@ -1,4 +1,4 @@
-<div class="flex flex-col items-center px-2 py-12 text-center md:py-24">
+<div class="flex flex-col items-center px-2 py-8 text-center md:py-16">
   <h1 class="text-4xl font-bold text-primary-700 md:text-5xl">
     {{ i18n.t().appTitle }}
   </h1>
@@ -6,15 +6,105 @@
     {{ i18n.t().tagline }}
   </p>
 
-  <div class="mt-8">
-    @if (!auth.isLoggedIn()) {
+  @if (!auth.isLoggedIn()) {
+    <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row">
       <a app-btn routerLink="/auth/login">{{ i18n.t().home.ctaSignIn }}</a>
-    } @else if (auth.isAdmin()) {
-      <a app-btn routerLink="/admin">{{ i18n.t().home.ctaAdmin }}</a>
-    } @else {
-      <p class="text-sm text-slate-500">{{ i18n.t().home.learnerSoon }}</p>
-    }
-  </div>
+      <a app-btn variant="secondary" routerLink="/browse">
+        {{ i18n.t().home.ctaBrowse }}
+      </a>
+    </div>
+  } @else {
+    <div class="mt-8 grid w-full max-w-md grid-cols-2 gap-3 text-left">
+      <a
+        routerLink="/exam"
+        class="card flex flex-col gap-1.5 border-primary-200 bg-primary-50 p-4 transition-colors hover:border-primary-400"
+      >
+        <svg
+          class="size-6 text-primary-600"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M9 4h6M9 4a2 2 0 0 0-2 2v0H6a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-1v0a2 2 0 0 0-2-2M9 4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M12 11v3l2 1.5"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span class="text-sm font-semibold text-primary-900">
+          {{ i18n.t().home.quickExam }}
+        </span>
+      </a>
+      <a
+        routerLink="/practice"
+        class="card flex flex-col gap-1.5 p-4 transition-colors hover:border-primary-300"
+      >
+        <svg
+          class="size-6 text-slate-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span class="text-sm font-semibold">
+          {{ i18n.t().home.quickPractice }}
+        </span>
+      </a>
+      <a
+        routerLink="/browse"
+        class="card flex flex-col gap-1.5 p-4 transition-colors hover:border-primary-300"
+      >
+        <svg
+          class="size-6 text-slate-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M12 6.5C10.5 5 8.5 4.5 6 4.5c-1 0-2 .15-3 .5v13c1-.35 2-.5 3-.5 2.5 0 4.5.5 6 2 1.5-1.5 3.5-2 6-2 1 0 2 .15 3 .5v-13c-1-.35-2-.5-3-.5-2.5 0-4.5.5-6 2zm0 0v13"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span class="text-sm font-semibold">
+          {{ i18n.t().home.quickBrowse }}
+        </span>
+      </a>
+      <a
+        routerLink="/history"
+        class="card flex flex-col gap-1.5 p-4 transition-colors hover:border-primary-300"
+      >
+        <svg
+          class="size-6 text-slate-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 12a8 8 0 1 0 2.3-5.6M4 4v3.5h3.5M12 8v4l2.5 2"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span class="text-sm font-semibold">
+          {{ i18n.t().home.quickHistory }}
+        </span>
+      </a>
+    </div>
+  }
 
   <div class="mt-16 flex items-center gap-2 text-xs text-slate-400">
     @switch (healthKind()) {

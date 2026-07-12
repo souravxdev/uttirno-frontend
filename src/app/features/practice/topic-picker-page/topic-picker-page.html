@@ -1,0 +1,39 @@
+<div class="mx-auto max-w-3xl space-y-6">
+  <app-page-header
+    [title]="i18n.t().practice.title"
+    [subtitle]="i18n.t().practice.pickTopic"
+  />
+
+  @if (taxonomy.loading()) {
+    <div class="space-y-4">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="skeleton h-20"></div>
+      }
+    </div>
+  } @else {
+    @for (s of taxonomy.subjects(); track s.id) {
+      <section>
+        <h2 class="text-base font-semibold text-slate-800">{{ s.name }}</h2>
+        <div class="mt-2 flex flex-wrap gap-2">
+          @for (t of s.topics; track t.id) {
+            <a
+              [routerLink]="['/practice', t.slug]"
+              class="inline-flex min-h-11 items-center rounded-full border px-3.5 text-sm"
+              [class]="
+                t.publishedQuestionCount === 0
+                  ? 'pointer-events-none border-slate-200 bg-white text-slate-600 opacity-40'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-primary-400 hover:text-primary-700'
+              "
+              [attr.aria-disabled]="t.publishedQuestionCount === 0"
+            >
+              {{ t.name }}
+              <span class="ml-1.5 text-xs text-slate-400">
+                {{ t.publishedQuestionCount }}
+              </span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

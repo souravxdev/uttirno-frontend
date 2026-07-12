@@ -1,0 +1,105 @@
+<div class="mx-auto max-w-2xl space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div>
+      <h1 class="text-xl font-bold md:text-2xl">{{ topicName() }}</h1>
+      <p class="text-sm text-slate-500">{{ i18n.t().practice.title }}</p>
+    </div>
+    <div class="flex gap-1.5">
+      <app-badge tone="slate">
+        {{ store.attempted() }} {{ i18n.t().practice.answered }}
+      </app-badge>
+      <app-badge tone="emerald">
+        {{ store.correct() }} {{ i18n.t().practice.correct }}
+      </app-badge>
+    </div>
+  </div>
+
+  @if (store.phase() === 'loading') {
+    <div class="space-y-3">
+      <div class="skeleton h-16"></div>
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="skeleton h-12"></div>
+      }
+    </div>
+  } @else if (store.phase() === 'empty') {
+    <div class="card">
+      <app-empty-state
+        [title]="i18n.t().practice.emptyTitle"
+        [message]="i18n.t().practice.emptyMessage"
+      >
+        <a app-btn variant="secondary" routerLink="/practice">
+          {{ i18n.t().practice.changeTopic }}
+        </a>
+      </app-empty-state>
+    </div>
+  } @else if (store.phase() === 'error') {
+    <div class="card">
+      <app-empty-state [title]="i18n.t().common.somethingWrong">
+        <button app-btn variant="secondary" (click)="store.next()">
+          {{ i18n.t().common.retry }}
+        </button>
+      </app-empty-state>
+    </div>
+  } @else if (store.phase() === 'answering' || store.phase() === 'checking') {
+    <div class="card p-4 md:p-5">
+      <p class="text-base leading-relaxed wrap-break-word">
+        {{ store.question()!.stem }}
+      </p>
+      <div class="mt-4 space-y-2.5">
+        @for (opt of store.question()!.options; track $index; let i = $index) {
+          <button
+            type="button"
+            class="flex min-h-11 w-full cursor-pointer items-start gap-2.5 rounded-xl border px-3 py-3 text-left transition-colors"
+            [class]="optionClass(i)"
+            (click)="store.select(i)"
+          >
+            <span
+              class="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600"
+            >
+              {{ labels()[i] }}
+            </span>
+            <span class="flex-1 text-base leading-relaxed wrap-break-word">
+              {{ opt }}
+            </span>
+          </button>
+        }
+      </div>
+      <button
+        app-btn
+        type="button"
+        class="mt-5 w-full sm:w-auto"
+        [disabled]="store.selectedIndex() === null"
+        [loading]="store.phase() === 'checking'"
+        (click)="store.check()"
+      >
+        {{ i18n.t().practice.check }}
+      </button>
+    </div>
+  } @else if (store.phase() === 'feedback') {
+    @if (store.reviewItem(); as item) {
+      <p
+        class="rounded-xl px-4 py-3 text-sm font-semibold"
+        [class]="
+          item.isCorrect
+            ? 'bg-emerald-50 text-emerald-800'
+            : 'bg-rose-50 text-rose-800'
+        "
+      >
+        {{
+          item.isCorrect
+            ? i18n.t().practice.correctBanner
+            : i18n.t().practice.wrongBanner
+        }}
+      </p>
+      <app-question-review [question]="item" />
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <button app-btn type="button" (click)="store.next()">
+          {{ i18n.t().practice.nextQuestion }}
+        </button>
+        <a app-btn variant="ghost" routerLink="/practice">
+          {{ i18n.t().practice.changeTopic }}
+        </a>
+      </div>
+    }
+  }
+</div>

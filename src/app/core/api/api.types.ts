@@ -18,3 +18,4 @@ export type QuestionStatus = Dto<'AdminQuestionDto'>['status'];
 export type QuestionDifficulty = Dto<'AdminQuestionDto'>['difficulty'];
 export type QuestionSourceType = Dto<'AdminQuestionDto'>['sourceType'];
 export type QuestionLanguage = Dto<'AdminQuestionDto'>['language'];
+export type SessionStatus = Dto<'SessionSummaryDto'>['status'];
