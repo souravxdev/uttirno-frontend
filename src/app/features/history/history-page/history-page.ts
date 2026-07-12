@@ -8,6 +8,7 @@ import { AppPageHeader } from '../../../shared/ui/page-header/page-header';
 import { AppPagination } from '../../../shared/ui/pagination/pagination';
 import { formatDateTime } from '../../../shared/util/format';
 import { HistoryStore } from '../history-state/history.store';
+import { ScoreSparkline } from '../score-sparkline/score-sparkline';
 
 @Component({
   selector: 'app-history-page',
@@ -18,6 +19,7 @@ import { HistoryStore } from '../history-state/history.store';
     AppEmptyState,
     AppPageHeader,
     AppPagination,
+    ScoreSparkline,
   ],
   templateUrl: './history-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

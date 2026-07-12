@@ -117,6 +117,7 @@ const en = {
   practice: {
     title: 'Practice',
     pickTopic: 'Pick a topic to practice',
+    allSubjects: 'All subjects',
     check: 'Check answer',
     nextQuestion: 'Next question',
     changeTopic: 'Change topic',
@@ -169,6 +170,7 @@ const en = {
     filterAll: 'All',
     newExam: 'New exam',
     expiredNote: 'Time ran out — your saved answers were scored.',
+    practiceWeakest: 'Practice your weakest:',
   },
   feedback: {
     title: 'Rate this exam',
@@ -184,6 +186,8 @@ const en = {
     resume: 'Resume',
     emptyTitle: 'No attempts yet',
     emptyMessage: 'Start your first mock exam.',
+    trend: 'Score trend',
+    trendAria: 'Your scores over time, oldest to newest',
   },
   admin: {
     questions: {
@@ -387,6 +391,7 @@ const bn: typeof en = {
   practice: {
     title: 'অনুশীলন',
     pickTopic: 'অনুশীলনের জন্য একটি টপিক বাছাই করুন',
+    allSubjects: 'সব বিষয়',
     check: 'উত্তর মিলিয়ে দেখুন',
     nextQuestion: 'পরের প্রশ্ন',
     changeTopic: 'টপিক বদলান',
@@ -439,6 +444,7 @@ const bn: typeof en = {
     filterAll: 'সব',
     newExam: 'নতুন পরীক্ষা',
     expiredNote: 'সময় শেষ — সংরক্ষিত উত্তরগুলো গণনা করা হয়েছে।',
+    practiceWeakest: 'দুর্বল বিষয় অনুশীলন করুন:',
   },
   feedback: {
     title: 'পরীক্ষাটি মূল্যায়ন করুন',
@@ -454,6 +460,8 @@ const bn: typeof en = {
     resume: 'চালিয়ে যান',
     emptyTitle: 'এখনো কোনো পরীক্ষা দেননি',
     emptyMessage: 'আপনার প্রথম মক পরীক্ষা শুরু করুন।',
+    trend: 'স্কোরের ধারা',
+    trendAria: 'সময়ের সাথে আপনার স্কোর, পুরনো থেকে নতুন',
   },
   admin: {
     questions: {

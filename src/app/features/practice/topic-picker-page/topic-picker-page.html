@@ -4,6 +4,12 @@
     [subtitle]="i18n.t().practice.pickTopic"
   />
 
+  @if (filtered()) {
+    <a app-btn variant="ghost" size="sm" routerLink="/practice">
+      {{ i18n.t().practice.allSubjects }}
+    </a>
+  }
+
   @if (taxonomy.loading()) {
     <div class="space-y-4">
       @for (i of [1, 2, 3]; track i) {
@@ -11,7 +17,7 @@
       }
     </div>
   } @else {
-    @for (s of taxonomy.subjects(); track s.id) {
+    @for (s of subjects(); track s.id) {
       <section>
         <h2 class="text-base font-semibold text-slate-800">{{ s.name }}</h2>
         <div class="mt-2 flex flex-wrap gap-2">

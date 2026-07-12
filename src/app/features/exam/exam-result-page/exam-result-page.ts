@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
@@ -35,6 +36,13 @@ export class ExamResultPage {
   readonly id = input.required<string>();
 
   protected readonly FILTERS = FILTERS;
+
+  /** Lowest-scoring subject — only meaningful with ≥2 subjects in the exam. */
+  protected readonly weakestSubject = computed(() => {
+    const rows = this.store.result()?.subjectBreakdown ?? [];
+    if (rows.length < 2) return null;
+    return rows.reduce((min, row) => (row.score < min.score ? row : min));
+  });
 
   constructor() {
     this.store.load(this.id);

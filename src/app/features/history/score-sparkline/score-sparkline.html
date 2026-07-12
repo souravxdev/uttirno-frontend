@@ -1,0 +1,31 @@
+@if (hasTrend()) {
+  <div class="card p-4">
+    <h2 class="text-sm font-semibold text-slate-700">
+      {{ i18n.t().history.trend }}
+    </h2>
+    <svg
+      class="mt-2 h-10 w-full overflow-visible"
+      [attr.viewBox]="viewBox"
+      preserveAspectRatio="none"
+      role="img"
+      [attr.aria-label]="i18n.t().history.trendAria"
+    >
+      <polyline
+        [attr.points]="polyline()"
+        fill="none"
+        stroke="var(--color-primary-600)"
+        stroke-width="1.5"
+        vector-effect="non-scaling-stroke"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+      />
+      <circle
+        [attr.cx]="lastPoint().x"
+        [attr.cy]="lastPoint().y"
+        r="2"
+        fill="var(--color-primary-600)"
+        vector-effect="non-scaling-stroke"
+      />
+    </svg>
+  </div>
+}

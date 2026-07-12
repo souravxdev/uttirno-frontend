@@ -1,6 +1,25 @@
 @import 'tailwindcss';
 
 /*
+ * Self-hosted Bangla font (no CDN — works offline for the demo). Bengali
+ * codepoints only; Latin falls through to system fonts earlier in the stack.
+ * One variable subset covers 400–700.
+ */
+@font-face {
+  font-family: 'Noto Sans Bengali';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src:
+    local('Noto Sans Bengali'),
+    url('/fonts/noto-sans-bengali.woff2') format('woff2');
+  unicode-range:
+    U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6,
+    U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9,
+    U+25CC, U+A8F1;
+}
+
+/*
  * Uttirno design tokens.
  *
  * Type & rhythm conventions (apply via utilities, not component CSS):
@@ -21,7 +40,7 @@
  */
 @theme {
   /* Latin text renders with system fonts; Bangla glyphs fall through to
-     Noto Sans Bengali (loaded in index.html). */
+     Noto Sans Bengali (self-hosted via @font-face above). */
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Noto Sans Bengali', sans-serif;

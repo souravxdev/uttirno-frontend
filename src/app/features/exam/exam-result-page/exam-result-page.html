@@ -106,6 +106,19 @@
       </div>
     </div>
 
+    <!-- Weakest-area practice CTA -->
+    @if (weakestSubject(); as weak) {
+      <a
+        app-btn
+        variant="secondary"
+        class="w-full"
+        routerLink="/practice"
+        [queryParams]="{ subject: weak.subjectSlug }"
+      >
+        {{ i18n.t().results.practiceWeakest }} {{ weak.subjectName }}
+      </a>
+    }
+
     <!-- Footer actions -->
     <div class="flex flex-col gap-2 pb-4 sm:flex-row">
       <a app-btn routerLink="/exam">{{ i18n.t().results.newExam }}</a>
