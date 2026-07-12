@@ -4,9 +4,10 @@ import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 
 type TabKey = 'questions' | 'review' | 'import';
 
-/** Review and Import tabs land in the next portion. */
 const TABS: { path: string; key: TabKey }[] = [
   { path: 'questions', key: 'questions' },
+  { path: 'review', key: 'review' },
+  { path: 'import', key: 'import' },
 ];
 
 @Component({

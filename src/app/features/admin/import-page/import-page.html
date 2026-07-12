@@ -1,0 +1,275 @@
+<div class="mx-auto max-w-3xl space-y-4 md:space-y-6">
+  <app-page-header [title]="i18n.t().nav.import" />
+
+  <!-- CSV import -->
+  <section class="card p-4 md:p-5">
+    <h2 class="text-base font-semibold">{{ i18n.t().admin.import.csvTitle }}</h2>
+    <p class="mt-0.5 text-sm text-slate-500">
+      {{ i18n.t().admin.import.csvSubtitle }}
+    </p>
+
+    <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <label
+        class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-slate-400"
+      >
+        <input
+          type="file"
+          accept=".csv,text/csv"
+          class="sr-only"
+          (change)="onFileChange($event)"
+        />
+        {{ i18n.t().admin.import.chooseFile }}
+      </label>
+      @if (selectedFile(); as file) {
+        <span class="truncate text-sm text-slate-600">{{ file.name }}</span>
+      }
+      <button
+        app-btn
+        type="button"
+        class="sm:ml-auto"
+        [loading]="store.csvPhase() === 'uploading'"
+        [disabled]="!selectedFile()"
+        (click)="upload()"
+      >
+        {{ i18n.t().admin.import.upload }}
+      </button>
+    </div>
+
+    @if (store.csvReport(); as report) {
+      <div class="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div class="rounded-lg bg-slate-50 p-3 text-center">
+          <p class="text-2xl font-bold">{{ report.totalRows }}</p>
+          <p class="text-xs text-slate-500">
+            {{ i18n.t().admin.import.totalRows }}
+          </p>
+        </div>
+        <div class="rounded-lg bg-emerald-50 p-3 text-center">
+          <p class="text-2xl font-bold text-emerald-700">
+            {{ report.imported }}
+          </p>
+          <p class="text-xs text-emerald-700">
+            {{ i18n.t().admin.import.imported }}
+          </p>
+        </div>
+        <div class="rounded-lg bg-amber-50 p-3 text-center">
+          <p class="text-2xl font-bold text-amber-700">
+            {{ report.skippedDuplicates }}
+          </p>
+          <p class="text-xs text-amber-700">
+            {{ i18n.t().admin.import.skipped }}
+          </p>
+        </div>
+        <div
+          class="rounded-lg p-3 text-center"
+          [class]="report.failed > 0 ? 'bg-rose-50' : 'bg-slate-50'"
+        >
+          <p
+            class="text-2xl font-bold"
+            [class]="report.failed > 0 ? 'text-rose-700' : ''"
+          >
+            {{ report.failed }}
+          </p>
+          <p
+            class="text-xs"
+            [class]="report.failed > 0 ? 'text-rose-700' : 'text-slate-500'"
+          >
+            {{ i18n.t().admin.import.failed }}
+          </p>
+        </div>
+      </div>
+
+      @if (report.rowErrors.length > 0) {
+        <h3 class="mt-5 text-sm font-semibold text-slate-700">
+          {{ i18n.t().admin.import.rowErrors }}
+        </h3>
+        <div class="mt-2 space-y-2">
+          @for (rowError of report.rowErrors; track rowError.row) {
+            <div class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm">
+              <p class="font-medium text-rose-800">
+                {{ i18n.t().admin.import.row }} {{ rowError.row }}
+              </p>
+              <ul class="mt-1 list-inside list-disc space-y-0.5 text-rose-700">
+                @for (err of rowError.errors; track err.path) {
+                  <li>
+                    <span class="font-mono text-xs">{{ err.path }}</span> —
+                    {{ err.message }}
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <details class="mt-5">
+      <summary
+        class="flex min-h-11 cursor-pointer items-center text-sm font-medium text-slate-600 hover:text-slate-800"
+      >
+        {{ i18n.t().admin.import.formatTitle }}
+      </summary>
+      <div class="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3">
+        <pre class="text-xs leading-relaxed whitespace-pre text-slate-100">{{ CSV_HEADER }}
+{{ CSV_EXAMPLE_ROW }}</pre>
+      </div>
+      <button
+        app-btn
+        type="button"
+        variant="secondary"
+        size="sm"
+        class="mt-2"
+        (click)="copyHeader()"
+      >
+        {{ i18n.t().admin.import.copyTemplate }}
+      </button>
+    </details>
+  </section>
+
+  <!-- AI drafts -->
+  <section class="card p-4 md:p-5">
+    <h2 class="text-base font-semibold">{{ i18n.t().admin.import.aiTitle }}</h2>
+    <p class="mt-0.5 text-sm text-slate-500">
+      {{ i18n.t().admin.import.aiSubtitle }}
+    </p>
+
+    @if (store.aiPhase() === 'unavailable') {
+      <p
+        class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+      >
+        {{ i18n.t().admin.import.aiUnavailable }}
+      </p>
+    } @else if (store.aiPhase() === 'error') {
+      <p
+        class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+      >
+        {{ i18n.t().admin.import.aiFailed }}
+      </p>
+    }
+
+    <form class="mt-4" [formGroup]="aiForm" (ngSubmit)="generate()">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <app-field
+          [label]="i18n.t().admin.form.subject"
+          forId="ai-subject"
+          [required]="true"
+        >
+          <select id="ai-subject" class="input" formControlName="subjectId">
+            <option value="">{{ i18n.t().admin.form.chooseSubject }}</option>
+            @for (s of taxonomy.subjects(); track s.id) {
+              <option [value]="s.id">{{ s.name }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field
+          [label]="i18n.t().admin.form.topic"
+          forId="ai-topic"
+          [required]="true"
+          [error]="topicError()"
+        >
+          <select
+            id="ai-topic"
+            class="input"
+            formControlName="topicId"
+            [attr.disabled]="aiTopics().length === 0 ? '' : null"
+          >
+            <option value="">{{ i18n.t().admin.form.chooseTopic }}</option>
+            @for (t of aiTopics(); track t.id) {
+              <option [value]="t.id">{{ t.name }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field [label]="i18n.t().admin.import.count" forId="ai-count">
+          <select id="ai-count" class="input" formControlName="count">
+            @for (n of COUNTS; track n) {
+              <option [ngValue]="n">{{ n }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field [label]="i18n.t().admin.form.difficulty" forId="ai-difficulty">
+          <select id="ai-difficulty" class="input" formControlName="difficulty">
+            @for (d of DIFFICULTIES; track d) {
+              <option [value]="d">{{ i18n.t().difficulty[d] }}</option>
+            }
+          </select>
+        </app-field>
+        <app-field [label]="i18n.t().admin.form.language" forId="ai-language">
+          <select id="ai-language" class="input" formControlName="language">
+            @for (l of LANGUAGES; track l) {
+              <option [value]="l">{{ i18n.t().language[l] }}</option>
+            }
+          </select>
+        </app-field>
+      </div>
+
+      <div class="mt-4 flex items-center gap-3">
+        <button
+          app-btn
+          type="submit"
+          [loading]="store.aiPhase() === 'loading'"
+        >
+          {{ i18n.t().admin.import.generate }}
+        </button>
+        @if (store.aiPhase() === 'loading') {
+          <p class="text-sm text-slate-500">
+            {{ i18n.t().admin.import.generating }}
+          </p>
+        }
+      </div>
+    </form>
+
+    @if (store.aiReport(); as report) {
+      <div class="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div class="rounded-lg bg-slate-50 p-3 text-center">
+          <p class="text-2xl font-bold">{{ report.requested }}</p>
+          <p class="text-xs text-slate-500">
+            {{ i18n.t().admin.import.requested }}
+          </p>
+        </div>
+        <div class="rounded-lg bg-emerald-50 p-3 text-center">
+          <p class="text-2xl font-bold text-emerald-700">{{ report.created }}</p>
+          <p class="text-xs text-emerald-700">
+            {{ i18n.t().admin.import.created }}
+          </p>
+        </div>
+        <div class="rounded-lg bg-amber-50 p-3 text-center">
+          <p class="text-2xl font-bold text-amber-700">
+            {{ report.skippedDuplicates }}
+          </p>
+          <p class="text-xs text-amber-700">
+            {{ i18n.t().admin.import.skipped }}
+          </p>
+        </div>
+        <div class="rounded-lg bg-slate-50 p-3 text-center">
+          <p class="text-2xl font-bold">{{ report.failed }}</p>
+          <p class="text-xs text-slate-500">
+            {{ i18n.t().admin.import.failed }}
+          </p>
+        </div>
+      </div>
+
+      @if (report.drafts.length > 0) {
+        <div class="mt-4 space-y-2">
+          @for (draft of report.drafts; track draft.id) {
+            <div class="rounded-lg border border-violet-200 bg-violet-50/50 p-3">
+              <p class="line-clamp-2 text-sm leading-relaxed wrap-break-word">
+                {{ draft.stem }}
+              </p>
+              <p class="mt-1 text-xs text-slate-500">
+                {{ draft.topic.name }} · {{ draft.topic.subject.name }}
+              </p>
+            </div>
+          }
+        </div>
+        <a
+          app-btn
+          variant="secondary"
+          size="sm"
+          class="mt-3"
+          routerLink="/admin/review"
+        >
+          {{ i18n.t().admin.import.openReview }}
+        </a>
+      }
+    }
+  </section>
+</div>

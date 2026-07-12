@@ -31,6 +31,20 @@ export const ADMIN_ROUTES: Routes = [
           ),
         title: 'Uttirno · Edit question',
       },
+      {
+        path: 'review',
+        loadComponent: () =>
+          import('./review-queue-page/review-queue-page').then(
+            (m) => m.ReviewQueuePage,
+          ),
+        title: 'Uttirno · Review',
+      },
+      {
+        path: 'import',
+        loadComponent: () =>
+          import('./import-page/import-page').then((m) => m.ImportPage),
+        title: 'Uttirno · Import',
+      },
     ],
   },
 ];

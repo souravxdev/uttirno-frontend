@@ -22,6 +22,8 @@ export class QuestionPreview {
   protected readonly i18n = inject(LanguageStore);
 
   readonly question = input.required<QuestionPreviewVm>();
+  /** false = bare content (no card frame / preview caption), e.g. inside review cards. */
+  readonly framed = input(true);
 
   protected readonly labels = computed(() =>
     this.question().language === 'BN' ? BN_LABELS : EN_LABELS,

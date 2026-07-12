@@ -1,0 +1,97 @@
+<div class="mx-auto max-w-3xl space-y-4 md:space-y-6">
+  <app-page-header
+    [title]="i18n.t().admin.review.title"
+    [subtitle]="i18n.t().admin.review.subtitle"
+  />
+
+  @if (store.loading()) {
+    <div class="space-y-3">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="skeleton h-56"></div>
+      }
+    </div>
+  } @else if (store.items().length === 0) {
+    <div class="card">
+      <app-empty-state
+        [title]="i18n.t().admin.review.emptyTitle"
+        [message]="i18n.t().admin.review.emptyMessage"
+      >
+        <svg
+          icon
+          class="size-10 text-emerald-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+          <path
+            d="M8.5 12.5l2.5 2.5 4.5-5"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <a app-btn variant="secondary" routerLink="/admin/questions">
+          {{ i18n.t().nav.questions }}
+        </a>
+      </app-empty-state>
+    </div>
+  } @else {
+    @for (q of store.items(); track q.id) {
+      <div class="card p-4 md:p-5">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <app-badge [tone]="sourceTypeTone(q.sourceType)">
+            @if (q.sourceType === 'AI_GENERATED') {
+              <svg
+                class="size-3"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2zM19 14l.9 2.6L22.5 17.5l-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z"
+                />
+              </svg>
+            }
+            {{ i18n.t().sourceType[q.sourceType] }}
+          </app-badge>
+          <app-badge [tone]="difficultyTone(q.difficulty)">
+            {{ i18n.t().difficulty[q.difficulty] }}
+          </app-badge>
+          <app-badge tone="slate">{{ i18n.t().language[q.language] }}</app-badge>
+          <span class="ml-auto text-xs text-slate-400">
+            {{ q.topic.name }} · {{ q.topic.subject.name }}
+          </span>
+        </div>
+
+        <app-question-preview [question]="vmOf(q)" [framed]="false" />
+
+        <div
+          class="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center"
+        >
+          <button app-btn type="button" (click)="store.approve(q.id)">
+            {{ i18n.t().admin.review.approve }}
+          </button>
+          <button
+            app-btn
+            type="button"
+            variant="secondary"
+            (click)="store.reject(q.id)"
+          >
+            {{ i18n.t().admin.review.reject }}
+          </button>
+          <a
+            app-btn
+            variant="ghost"
+            size="sm"
+            class="sm:ml-auto"
+            [routerLink]="['/admin/questions', q.id, 'edit']"
+          >
+            {{ i18n.t().common.edit }}
+          </a>
+        </div>
+      </div>
+    }
+  }
+</div>
