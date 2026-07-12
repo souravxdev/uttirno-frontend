@@ -9,12 +9,14 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { AnalyticsService } from '../../../core/analytics/analytics-state/analytics.service';
 import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { AppButton } from '../../../shared/ui/button/button';
 import { AppConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { AppEmptyState } from '../../../shared/ui/empty-state/empty-state';
 import type { ExamLeaveGuarded } from '../exam-leave.guard';
 import { ExamPalette, type PaletteItem } from '../exam-palette/exam-palette';
+import { ExamHandoffService } from '../exam-state/exam-handoff.service';
 import { ExamPlayStore } from '../exam-state/exam-play.store';
 import { ExamTimer } from '../exam-timer/exam-timer';
 
@@ -36,6 +38,12 @@ export class ExamPlayerPage implements ExamLeaveGuarded {
   protected readonly i18n = inject(LanguageStore);
   protected readonly store = inject(ExamPlayStore);
   private readonly router = inject(Router);
+  private readonly analytics = inject(AnalyticsService);
+  private readonly handoff = inject(ExamHandoffService);
+
+  /** Non-null only when the config page just started THIS exam (fresh start). */
+  private readonly justStartedId = this.handoff.consume();
+  private resumeEmitted = false;
 
   /** Route param via component input binding. */
   readonly id = input.required<string>();
@@ -86,6 +94,21 @@ export class ExamPlayerPage implements ExamLeaveGuarded {
     effect(() => {
       if (this.store.finished()) {
         void this.router.navigate(['/exam', this.id(), 'result']);
+      }
+    });
+
+    // An in-progress session reached without the fresh-start handoff means the
+    // learner resumed after a reload/disconnect (or from history).
+    effect(() => {
+      if (this.resumeEmitted) return;
+      if (this.store.status() === 'IN_PROGRESS') {
+        this.resumeEmitted = true;
+        if (this.justStartedId !== this.id()) {
+          this.analytics.record({
+            name: 'exam_resumed_after_disconnect',
+            sessionId: this.id(),
+          });
+        }
       }
     });
   }

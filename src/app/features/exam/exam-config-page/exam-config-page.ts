@@ -10,6 +10,7 @@ import { TaxonomyStore } from '../../../core/taxonomy/taxonomy-state/taxonomy.st
 import { AppButton } from '../../../shared/ui/button/button';
 import { AppPageHeader } from '../../../shared/ui/page-header/page-header';
 import { ExamConfigStore } from '../exam-state/exam-config.store';
+import { ExamHandoffService } from '../exam-state/exam-handoff.service';
 import { COUNT_PRESETS, DURATION_PRESETS } from '../exam-state/exam.models';
 
 @Component({
@@ -24,6 +25,7 @@ export class ExamConfigPage {
   protected readonly store = inject(ExamConfigStore);
   protected readonly taxonomy = inject(TaxonomyStore);
   private readonly router = inject(Router);
+  private readonly handoff = inject(ExamHandoffService);
 
   protected readonly COUNT_PRESETS = COUNT_PRESETS;
   protected readonly DURATION_PRESETS = DURATION_PRESETS;
@@ -31,10 +33,14 @@ export class ExamConfigPage {
   constructor() {
     this.taxonomy.loadOnce();
 
-    // Session started → into the player.
+    // Session started → into the player. Mark the handoff so the player knows
+    // this is a fresh start, not a resume-after-disconnect.
     effect(() => {
       const id = this.store.startedId();
-      if (id) void this.router.navigate(['/exam', id]);
+      if (id) {
+        this.handoff.markStarted(id);
+        void this.router.navigate(['/exam', id]);
+      }
     });
 
     // Keep the selected count preset inside the available pool.

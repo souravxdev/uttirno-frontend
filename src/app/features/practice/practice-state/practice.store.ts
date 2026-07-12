@@ -13,6 +13,7 @@ import {
   tap,
 } from 'rxjs';
 import type { Dto } from '../../../core/api/api.types';
+import { AnalyticsService } from '../../../core/analytics/analytics-state/analytics.service';
 import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { SessionsService } from '../../../core/sessions/sessions-state/sessions.service';
 import { ToastStore } from '../../../shared/ui/toast-state/toast.store';
@@ -48,6 +49,7 @@ export const PracticeStore = signalStore(
     const sessionsApi = inject(SessionsService);
     const toast = inject(ToastStore);
     const i18n = inject(LanguageStore);
+    const analytics = inject(AnalyticsService);
 
     const begin = rxMethod<string>(
       pipe(
@@ -132,6 +134,11 @@ export const PracticeStore = signalStore(
                       phase: 'feedback',
                       attempted: store.attempted() + 1,
                       correct: store.correct() + (item.isCorrect ? 1 : 0),
+                    });
+                    analytics.record({
+                      name: 'practice_answered',
+                      sessionId,
+                      meta: { topicSlug: store.topicSlug() ?? undefined },
                     });
                   },
                   error: () => {

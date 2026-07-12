@@ -382,6 +382,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a client-observed analytics event */
+        post: operations["EventsController_record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/events/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analytics summary: per-event counts (all-time + 7d) */
+        get: operations["AdminEventsController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -847,6 +881,39 @@ export interface components {
             page: number;
             pageSize: number;
             items: components["schemas"]["FeedbackDto"][];
+        };
+        RecordEventRequestDto: {
+            /**
+             * @description Client-recordable event name
+             * @enum {string}
+             */
+            name: "exam_resumed_after_disconnect" | "practice_answered";
+            /** @description Related session id, when applicable */
+            sessionId?: string;
+            /** @description Free-form context (e.g. { topicSlug }) */
+            meta?: {
+                [key: string]: unknown;
+            };
+        };
+        EventNameCountDto: {
+            /** @example exam_submitted */
+            name: string;
+            /**
+             * @description All-time count
+             * @example 42
+             */
+            total: number;
+            /**
+             * @description Count in the last 7 days
+             * @example 7
+             */
+            last7Days: number;
+        };
+        AdminEventsSummaryDto: {
+            /** @description Total events recorded, all-time */
+            total: number;
+            /** @description Per-event-name counts (every known name, zero-filled) */
+            events: components["schemas"]["EventNameCountDto"][];
         };
     };
     responses: never;
@@ -1799,6 +1866,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminFeedbackListDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EventsController_record: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordEventRequestDto"];
+            };
+        };
+        responses: {
+            /** @description Recorded */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminEventsController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminEventsSummaryDto"];
                 };
             };
             /** @description Missing or invalid access token */
