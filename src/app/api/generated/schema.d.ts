@@ -160,6 +160,40 @@ export interface paths {
         patch: operations["AdminQuestionsController_update"];
         trace?: never;
     };
+    "/api/admin/questions/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve (review action): DRAFT | IN_REVIEW → PUBLISHED */
+        post: operations["AdminQuestionsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/questions/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject (review action): IN_REVIEW → DRAFT */
+        post: operations["AdminQuestionsController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions": {
         parameters: {
             query?: never;
@@ -274,6 +308,40 @@ export interface paths {
         get: operations["QuizSessionsController_result"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/import/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk-import questions from CSV (fixed template; rows enter IN_REVIEW; duplicate stems skipped) */
+        post: operations["ImportController_importCsv"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/import/ai-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate AI question drafts — always AI_GENERATED + IN_REVIEW, never published */
+        post: operations["ImportController_generateAiDrafts"];
         delete?: never;
         options?: never;
         head?: never;
@@ -530,6 +598,13 @@ export interface components {
              *     ]
              */
             subjects?: string[];
+            /**
+             * @description Restrict questions to these topic slugs (practice mode)
+             * @example [
+             *       "byakoron"
+             *     ]
+             */
+            topics?: string[];
         };
         SessionQuestionDto: {
             /** @example 0 */
@@ -636,6 +711,73 @@ export interface components {
             /** @description Per-subject performance, ordered by subject order */
             subjectBreakdown: components["schemas"]["SubjectBreakdownDto"][];
             items: components["schemas"]["SessionResultItemDto"][];
+        };
+        RowErrorItemDto: {
+            /** @example correctOption */
+            path: string;
+            /** @example Too small: expected number to be >=1 */
+            message: string;
+        };
+        RowErrorDto: {
+            /**
+             * @description 1-based line number in the file (header is line 1)
+             * @example 4
+             */
+            row: number;
+            errors: components["schemas"]["RowErrorItemDto"][];
+        };
+        ImportReportDto: {
+            /**
+             * @description Data rows found in the file
+             * @example 10
+             */
+            totalRows: number;
+            /**
+             * @description Rows imported as IN_REVIEW
+             * @example 7
+             */
+            imported: number;
+            /**
+             * @description Rows skipped — a question with the same stem exists
+             * @example 2
+             */
+            skippedDuplicates: number;
+            /**
+             * @description Rows rejected by validation
+             * @example 1
+             */
+            failed: number;
+            rowErrors: components["schemas"]["RowErrorDto"][];
+        };
+        AiDraftRequestDto: {
+            /** @description Topic the drafts belong to */
+            topicId: string;
+            /** @default 5 */
+            count: number;
+            /**
+             * @default MEDIUM
+             * @enum {string}
+             */
+            difficulty: "EASY" | "MEDIUM" | "HARD";
+            /** @enum {string} */
+            language: "BN" | "EN";
+        };
+        AiDraftReportDto: {
+            /** @example 5 */
+            requested: number;
+            /**
+             * @description Drafts created as AI_GENERATED + IN_REVIEW
+             * @example 4
+             */
+            created: number;
+            /** @example 1 */
+            skippedDuplicates: number;
+            /**
+             * @description Drafts the model returned malformed
+             * @example 0
+             */
+            failed: number;
+            drafts: components["schemas"]["AdminQuestionDto"][];
         };
     };
     responses: never;
@@ -1069,6 +1211,104 @@ export interface operations {
             };
         };
     };
+    AdminQuestionsController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminQuestionDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Question not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Question is not in an approvable state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminQuestionsController_reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminQuestionDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Question not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Only IN_REVIEW questions can be rejected */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     QuizSessionsController_history: {
         parameters: {
             query?: {
@@ -1328,6 +1568,97 @@ export interface operations {
             };
             /** @description Results are available only after submission */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ImportController_importCsv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportReportDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ImportController_generateAiDrafts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiDraftRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiDraftReportDto"];
+                };
+            };
+            /** @description Missing or invalid access token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires ADMIN role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description AI provider failed or returned garbage */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ANTHROPIC_API_KEY is not configured */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
