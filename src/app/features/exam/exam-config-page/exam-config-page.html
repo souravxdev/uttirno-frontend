@@ -1,0 +1,93 @@
+<div class="mx-auto max-w-lg space-y-4 md:space-y-6">
+  <app-page-header
+    [title]="i18n.t().exam.configTitle"
+    [subtitle]="i18n.t().exam.configSubtitle"
+  />
+
+  <!-- Question count -->
+  <div class="card p-4 md:p-5">
+    <p class="label">{{ i18n.t().exam.questionCount }}</p>
+    <div class="grid grid-cols-5 gap-2">
+      @for (preset of COUNT_PRESETS; track preset) {
+        <button
+          type="button"
+          class="min-h-11 cursor-pointer rounded-lg border text-sm font-semibold transition-colors disabled:cursor-default disabled:opacity-40"
+          [class]="
+            store.questionCount() === preset
+              ? 'border-primary-600 bg-primary-600 text-white'
+              : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+          "
+          [disabled]="preset > store.availableCount()"
+          (click)="store.setCount(preset)"
+        >
+          {{ preset }}
+        </button>
+      }
+    </div>
+    <p class="mt-2 text-xs text-slate-500">
+      {{ store.availableCount() }} {{ i18n.t().exam.available }}
+    </p>
+  </div>
+
+  <!-- Duration -->
+  <div class="card p-4 md:p-5">
+    <p class="label">{{ i18n.t().exam.duration }}</p>
+    <div class="grid grid-cols-5 gap-2">
+      @for (preset of DURATION_PRESETS; track preset) {
+        <button
+          type="button"
+          class="min-h-11 cursor-pointer rounded-lg border text-sm font-semibold transition-colors"
+          [class]="
+            store.timeLimitMin() === preset
+              ? 'border-primary-600 bg-primary-600 text-white'
+              : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+          "
+          (click)="store.setDuration(preset)"
+        >
+          {{ preset }}
+        </button>
+      }
+    </div>
+    <p class="mt-2 text-xs text-slate-500">{{ i18n.t().common.minutesShort }}</p>
+  </div>
+
+  <!-- Subjects -->
+  <div class="card p-4 md:p-5">
+    <p class="label">{{ i18n.t().exam.subjects }}</p>
+    <div class="flex flex-wrap gap-2">
+      @for (s of taxonomy.subjects(); track s.id) {
+        <button
+          type="button"
+          class="min-h-11 cursor-pointer rounded-full px-4 text-sm font-medium"
+          [class]="
+            store.subjects().includes(s.slug)
+              ? 'bg-primary-600 text-white'
+              : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400'
+          "
+          (click)="store.toggleSubject(s.slug)"
+        >
+          {{ s.name }}
+        </button>
+      }
+    </div>
+    <p class="mt-2 text-xs text-slate-500">{{ i18n.t().exam.subjectsHint }}</p>
+  </div>
+
+  @if (store.notEnough()) {
+    <p
+      class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+    >
+      {{ i18n.t().exam.notEnough }}
+    </p>
+  }
+
+  <button
+    app-btn
+    type="button"
+    class="w-full"
+    [loading]="store.creating()"
+    (click)="store.begin()"
+  >
+    {{ i18n.t().exam.start }}
+  </button>
+</div>

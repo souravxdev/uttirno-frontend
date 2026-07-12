@@ -38,7 +38,13 @@ export const routes: Routes = [
         (m) => m.PRACTICE_ROUTES,
       ),
   },
-  // /exam and /history routes land with their features (portions B and C).
+  {
+    path: 'exam',
+    canActivate: [authGuard],
+    loadChildren: () =>
+      import('./features/exam/exam.routes').then((m) => m.EXAM_ROUTES),
+  },
+  // /history lands with its feature (portion C).
   {
     path: 'admin',
     canActivate: [adminGuard],

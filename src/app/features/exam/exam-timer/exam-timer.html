@@ -1,0 +1,16 @@
+<span
+  class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-sm font-semibold tabular-nums"
+  [class]="toneClass()"
+>
+  <svg class="size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="2" />
+    <path
+      d="M12 10v3l2 1.5M10 2h4"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+  {{ clock() }}
+</span>
