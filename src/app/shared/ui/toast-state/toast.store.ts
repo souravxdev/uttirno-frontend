@@ -1,5 +1,5 @@
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
-import type { Toast, ToastKind } from './ui.models';
+import type { Toast, ToastKind } from '../ui.models';
 
 const AUTO_DISMISS_MS = 3500;
 

@@ -6,7 +6,7 @@ import {
   withMethods,
   withState,
 } from '@ngrx/signals';
-import { Lang, TRANSLATIONS } from './translations';
+import { Lang, TRANSLATIONS } from '../translations';
 
 const STORAGE_KEY = 'uttirno.lang';
 

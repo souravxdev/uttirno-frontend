@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { computed, inject } from '@angular/core';
 import {
   patchState,
@@ -7,10 +6,19 @@ import {
   withMethods,
   withState,
 } from '@ngrx/signals';
-import { firstValueFrom } from 'rxjs';
-import { API_BASE_URL } from '../api/api-base';
-import type { Dto } from '../api/api.types';
-import type { AuthErrorKey, AuthState, StoredAuth } from './auth.models';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import {
+  EMPTY,
+  catchError,
+  finalize,
+  firstValueFrom,
+  pipe,
+  switchMap,
+  tap,
+} from 'rxjs';
+import type { Dto } from '../../api/api.types';
+import type { AuthState, RegisterInput, StoredAuth } from './auth.models';
+import { AuthService } from './auth.service';
 
 const STORAGE_KEY = 'uttirno.auth';
 
@@ -43,7 +51,7 @@ export const AuthStore = signalStore(
     isAdmin: computed(() => user()?.role === 'ADMIN'),
   })),
   withMethods((store) => {
-    const http = inject(HttpClient);
+    const authApi = inject(AuthService);
     // withMethods runs once per store instance, so a plain closure
     // variable gives single-flight refresh for free.
     let refreshInFlight: Promise<string | null> | null = null;
@@ -70,40 +78,42 @@ export const AuthStore = signalStore(
       localStorage.removeItem(STORAGE_KEY);
     };
 
-    const authenticate = async (
-      path: '/api/auth/login' | '/api/auth/register',
-      body: Dto<'LoginRequestDto'> | Dto<'RegisterRequestDto'>,
-      errorKey: AuthErrorKey,
-    ): Promise<boolean> => {
-      patchState(store, { pending: true, error: null });
-      try {
-        const res = await firstValueFrom(
-          http.post<Dto<'AuthResponseDto'>>(`${API_BASE_URL}${path}`, body),
-        );
-        apply(res);
-        return true;
-      } catch {
-        patchState(store, { error: errorKey });
-        return false;
-      } finally {
-        patchState(store, { pending: false });
-      }
-    };
-
     return {
-      login: (email: string, password: string): Promise<boolean> =>
-        authenticate('/api/auth/login', { email, password }, 'invalidCredentials'),
-
-      register: (
-        email: string,
-        password: string,
-        name?: string,
-      ): Promise<boolean> =>
-        authenticate(
-          '/api/auth/register',
-          name ? { email, password, name } : { email, password },
-          'registerFailed',
+      login: rxMethod<Dto<'LoginRequestDto'>>(
+        pipe(
+          tap(() => patchState(store, { pending: true, error: null })),
+          switchMap((body) =>
+            authApi.login(body).pipe(
+              tap({
+                next: (res) => apply(res),
+                error: () =>
+                  patchState(store, { error: 'invalidCredentials' as const }),
+              }),
+              catchError(() => EMPTY),
+              finalize(() => patchState(store, { pending: false })),
+            ),
+          ),
         ),
+      ),
+
+      register: rxMethod<RegisterInput>(
+        pipe(
+          tap(() => patchState(store, { pending: true, error: null })),
+          switchMap(({ email, password, name }) =>
+            authApi
+              .register(name ? { email, password, name } : { email, password })
+              .pipe(
+                tap({
+                  next: (res) => apply(res),
+                  error: () =>
+                    patchState(store, { error: 'registerFailed' as const }),
+                }),
+                catchError(() => EMPTY),
+                finalize(() => patchState(store, { pending: false })),
+              ),
+          ),
+        ),
+      ),
 
       logout: clear,
 
@@ -112,20 +122,17 @@ export const AuthStore = signalStore(
       },
 
       /**
-       * Exchanges the refresh token for a new token pair. Single-flight:
-       * concurrent 401s share one request. Any failure signs the user out.
+       * Exchanges the refresh token for a new token pair. Promise-based
+       * (not an rxMethod) because the interceptor must await the result.
+       * Single-flight: concurrent 401s share one request. Any failure
+       * signs the user out.
        */
       refresh(): Promise<string | null> {
         const refreshToken = store.refreshToken();
         if (!refreshToken) return Promise.resolve(null);
         refreshInFlight ??= (async () => {
           try {
-            const res = await firstValueFrom(
-              http.post<Dto<'AuthResponseDto'>>(
-                `${API_BASE_URL}/api/auth/refresh`,
-                { refreshToken } satisfies Dto<'RefreshRequestDto'>,
-              ),
-            );
+            const res = await firstValueFrom(authApi.refresh({ refreshToken }));
             apply(res);
             return res.accessToken;
           } catch {

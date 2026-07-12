@@ -1,4 +1,4 @@
-import type { paths } from '../../api/generated/schema';
+import type { paths } from '../../../api/generated/schema';
 
 export type HealthResponse =
   paths['/api/health']['get']['responses']['200']['content']['application/json'];

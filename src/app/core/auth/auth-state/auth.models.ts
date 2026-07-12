@@ -1,4 +1,4 @@
-import type { Dto } from '../api/api.types';
+import type { Dto } from '../../api/api.types';
 
 /** Rendered via i18n: t().auth[error] — keys, never raw messages. */
 export type AuthErrorKey = 'invalidCredentials' | 'registerFailed';
@@ -16,4 +16,10 @@ export interface AuthState {
   refreshToken: string | null;
   pending: boolean;
   error: AuthErrorKey | null;
+}
+
+export interface RegisterInput {
+  email: string;
+  password: string;
+  name?: string;
 }

@@ -14,6 +14,14 @@
   shared/ui/button/button.ts + button.html
 - Types/interfaces live in grouped model files (e.g. ui.models.ts,
   auth.models.ts, api.types.ts) — never declared inside component files
+- Data access pattern: HTTP calls live in @Injectable services; stores
+  call services through rxMethod pipelines handling next/error/finalize
+  (tap({next,error}) + catchError(() => EMPTY) + finalize); components
+  trigger store methods and derive view data with computed()
+- Each domain keeps its service + store + models together in a
+  '<domain>-state' folder (e.g. core/auth/auth-state/,
+  features/home/home-state/); routes always lazy-load
+  (loadComponent/loadChildren)
 
 ## API layer
 - All API types live in src/app/api/generated/ — GENERATED, never edit

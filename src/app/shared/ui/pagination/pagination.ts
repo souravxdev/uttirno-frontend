@@ -6,7 +6,7 @@ import {
   input,
   output,
 } from '@angular/core';
-import { LanguageStore } from '../../../core/i18n/language.store';
+import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { AppButton } from '../button/button';
 
 @Component({

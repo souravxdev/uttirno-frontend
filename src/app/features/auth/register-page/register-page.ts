@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -12,8 +13,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthStore } from '../../../core/auth/auth.store';
-import { LanguageStore } from '../../../core/i18n/language.store';
+import { AuthStore } from '../../../core/auth/auth-state/auth.store';
+import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { AppButton } from '../../../shared/ui/button/button';
 import { AppField } from '../../../shared/ui/field/field';
 
@@ -58,18 +59,15 @@ export class RegisterPage {
 
   constructor() {
     this.auth.clearError();
+    effect(() => {
+      if (this.auth.isLoggedIn()) void this.router.navigateByUrl('/');
+    });
   }
 
-  protected async submit(): Promise<void> {
+  protected submit(): void {
     this.submitted.set(true);
     if (this.form.invalid) return;
     const { name, email, password } = this.form.getRawValue();
-    const ok = await this.auth.register(
-      email,
-      password,
-      name.trim() || undefined,
-    );
-    if (!ok) return;
-    await this.router.navigateByUrl('/');
+    this.auth.register({ email, password, name: name.trim() || undefined });
   }
 }

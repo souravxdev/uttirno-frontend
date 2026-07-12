@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { LanguageStore } from '../../../core/i18n/language.store';
-import { ToastStore } from '../toast.store';
+import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
+import { ToastStore } from '../toast-state/toast.store';
 import type { ToastKind } from '../ui.models';
 
 const KIND_BORDER: Record<ToastKind, string> = {

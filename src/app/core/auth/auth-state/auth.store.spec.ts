@@ -4,7 +4,7 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { API_BASE_URL } from '../api/api-base';
+import { API_BASE_URL } from '../../api/api-base';
 import { AuthStore } from './auth.store';
 
 const STORAGE_KEY = 'uttirno.auth';
@@ -52,29 +52,48 @@ describe('AuthStore', () => {
     expect(store.isLoggedIn()).toBe(false);
   });
 
-  it('login stores the session and persists it', async () => {
+  it('login stores the session and persists it', () => {
     const store = TestBed.inject(AuthStore);
-    const result = store.login('admin@uttirno.test', 'pw');
+    store.login({ email: 'admin@uttirno.test', password: 'pw' });
     const req = httpMock.expectOne(`${API_BASE_URL}/api/auth/login`);
     expect(req.request.body).toEqual({
       email: 'admin@uttirno.test',
       password: 'pw',
     });
+    expect(store.pending()).toBe(true);
     req.flush(session);
-    await expect(result).resolves.toBe(true);
+    expect(store.pending()).toBe(false);
     expect(store.isLoggedIn()).toBe(true);
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual(session);
   });
 
-  it('failed login sets the error key and stays signed out', async () => {
+  it('failed login sets the error key and keeps the rxMethod alive', () => {
     const store = TestBed.inject(AuthStore);
-    const result = store.login('a@b.c', 'wrong');
+    store.login({ email: 'a@b.c', password: 'wrong' });
     httpMock
       .expectOne(`${API_BASE_URL}/api/auth/login`)
       .flush(null, { status: 401, statusText: 'Unauthorized' });
-    await expect(result).resolves.toBe(false);
     expect(store.error()).toBe('invalidCredentials');
+    expect(store.pending()).toBe(false);
     expect(store.isLoggedIn()).toBe(false);
+
+    // The pipeline must survive the error and accept the next call.
+    store.login({ email: 'a@b.c', password: 'right' });
+    const retry = httpMock.expectOne(`${API_BASE_URL}/api/auth/login`);
+    retry.flush(session);
+    expect(store.isLoggedIn()).toBe(true);
+  });
+
+  it('register omits an empty name and signs the user in', () => {
+    const store = TestBed.inject(AuthStore);
+    store.register({ email: 'new@uttirno.test', password: 'longenough' });
+    const req = httpMock.expectOne(`${API_BASE_URL}/api/auth/register`);
+    expect(req.request.body).toEqual({
+      email: 'new@uttirno.test',
+      password: 'longenough',
+    });
+    req.flush(session);
+    expect(store.isLoggedIn()).toBe(true);
   });
 
   it('refresh is single-flight: concurrent calls share one request', async () => {

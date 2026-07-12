@@ -7,7 +7,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, from, switchMap, throwError } from 'rxjs';
 import { API_BASE_URL } from '../api/api-base';
-import { AuthStore } from './auth.store';
+import { AuthStore } from './auth-state/auth.store';
 
 /** Endpoints that must never carry or trigger token logic. */
 const NO_AUTH_PATHS = [

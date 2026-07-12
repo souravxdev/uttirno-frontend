@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -12,8 +13,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthStore } from '../../../core/auth/auth.store';
-import { LanguageStore } from '../../../core/i18n/language.store';
+import { AuthStore } from '../../../core/auth/auth-state/auth.store';
+import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { AppButton } from '../../../shared/ui/button/button';
 import { AppField } from '../../../shared/ui/field/field';
 
@@ -58,17 +59,19 @@ export class LoginPage {
 
   constructor() {
     this.auth.clearError();
+    // Covers both a fresh login and an already-signed-in visitor.
+    effect(() => {
+      if (!this.auth.isLoggedIn()) return;
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+      void this.router.navigateByUrl(
+        returnUrl?.startsWith('/') ? returnUrl : '/',
+      );
+    });
   }
 
-  protected async submit(): Promise<void> {
+  protected submit(): void {
     this.submitted.set(true);
     if (this.form.invalid) return;
-    const { email, password } = this.form.getRawValue();
-    const ok = await this.auth.login(email, password);
-    if (!ok) return;
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    await this.router.navigateByUrl(
-      returnUrl?.startsWith('/') ? returnUrl : '/',
-    );
+    this.auth.login(this.form.getRawValue());
   }
 }
