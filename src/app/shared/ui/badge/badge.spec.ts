@@ -1,4 +1,9 @@
-import { difficultyTone, sourceTypeTone, statusTone } from './badge';
+import {
+  difficultyTone,
+  sessionStatusTone,
+  sourceTypeTone,
+  statusTone,
+} from './badge';
 
 describe('badge tone mappers', () => {
   it('maps question status to semantic tones', () => {
@@ -17,5 +22,12 @@ describe('badge tone mappers', () => {
     expect(sourceTypeTone('AI_GENERATED')).toBe('violet');
     expect(sourceTypeTone('PAST_PAPER')).toBe('sky');
     expect(sourceTypeTone('ORIGINAL')).toBe('slate');
+  });
+
+  it('maps session status to semantic tones', () => {
+    expect(sessionStatusTone('SUBMITTED')).toBe('emerald');
+    expect(sessionStatusTone('IN_PROGRESS')).toBe('amber');
+    expect(sessionStatusTone('EXPIRED')).toBe('rose');
+    expect(sessionStatusTone('CREATED')).toBe('slate');
   });
 });

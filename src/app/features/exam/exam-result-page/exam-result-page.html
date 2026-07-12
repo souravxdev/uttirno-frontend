@@ -1,0 +1,114 @@
+<div class="mx-auto max-w-2xl space-y-4 md:space-y-6">
+  @if (store.loading()) {
+    <div class="space-y-3">
+      <div class="skeleton h-40"></div>
+      <div class="skeleton h-24"></div>
+      <div class="skeleton h-64"></div>
+    </div>
+  } @else if (store.result(); as result) {
+    <!-- Score hero -->
+    <div class="card p-6 text-center">
+      @if (result.status === 'EXPIRED') {
+        <div class="mb-3 flex flex-col items-center gap-1.5">
+          <app-badge tone="rose">
+            {{ i18n.t().sessionStatus.EXPIRED }}
+          </app-badge>
+          <p class="text-xs text-slate-500">
+            {{ i18n.t().results.expiredNote }}
+          </p>
+        </div>
+      }
+      <p>
+        <span class="text-5xl font-bold tabular-nums text-primary-700">
+          {{ result.totals.score }}
+        </span>
+        <span class="text-xl text-slate-400"> / {{ result.questionCount }}</span>
+      </p>
+      <p class="mt-3 font-mono text-sm tabular-nums text-slate-500">
+        {{ result.totals.correct }} − {{ result.totals.wrong }}×0.50 =
+        {{ result.totals.score }}
+      </p>
+      <p class="mt-1 text-xs text-slate-400">
+        {{ i18n.t().results.negativeMarking }}
+      </p>
+    </div>
+
+    <!-- Totals chips -->
+    <div class="flex flex-wrap justify-center gap-2">
+      <app-badge tone="emerald">
+        {{ result.totals.correct }} {{ i18n.t().results.correct }}
+      </app-badge>
+      <app-badge tone="rose">
+        {{ result.totals.wrong }} {{ i18n.t().results.wrong }}
+      </app-badge>
+      <app-badge tone="amber">
+        {{ result.totals.skipped }} {{ i18n.t().results.skipped }}
+      </app-badge>
+    </div>
+
+    <!-- Subject bars -->
+    @if (result.subjectBreakdown.length > 0) {
+      <div class="card p-4 md:p-5">
+        <h2 class="text-base font-semibold">
+          {{ i18n.t().results.bySubject }}
+        </h2>
+        <div class="mt-3 space-y-3">
+          @for (row of result.subjectBreakdown; track row.subjectSlug) {
+            <div>
+              <div class="flex items-baseline justify-between gap-2 text-sm">
+                <span class="wrap-break-word">{{ row.subjectName }}</span>
+                <span class="font-semibold tabular-nums">{{ row.score }}</span>
+              </div>
+              <div class="mt-1 h-2 rounded-full bg-slate-100">
+                <div
+                  class="h-2 rounded-full bg-primary-600"
+                  [style.width.%]="subjectPct(row)"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Review -->
+    <div>
+      <h2 class="text-base font-semibold">{{ i18n.t().results.review }}</h2>
+      <div class="mt-2 flex flex-wrap gap-2">
+        @for (f of FILTERS; track f) {
+          <button
+            type="button"
+            class="min-h-11 cursor-pointer rounded-full px-3.5 text-sm font-medium"
+            [class]="
+              store.filter() === f
+                ? 'bg-primary-600 text-white'
+                : 'border border-slate-300 bg-white text-slate-600 hover:border-slate-400'
+            "
+            (click)="store.setFilter(f)"
+          >
+            {{ filterLabel(f) }}
+            <span
+              class="ml-1 text-xs"
+              [class]="store.filter() === f ? 'text-primary-100' : 'text-slate-400'"
+            >
+              {{ filterCount(f) }}
+            </span>
+          </button>
+        }
+      </div>
+      <div class="mt-3 space-y-3">
+        @for (item of store.filteredItems(); track item.questionId) {
+          <app-question-review [question]="item" [ordinal]="item.order + 1" />
+        }
+      </div>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="flex flex-col gap-2 pb-4 sm:flex-row">
+      <a app-btn routerLink="/exam">{{ i18n.t().results.newExam }}</a>
+      <a app-btn variant="ghost" routerLink="/history">
+        {{ i18n.t().nav.history }}
+      </a>
+    </div>
+  }
+</div>

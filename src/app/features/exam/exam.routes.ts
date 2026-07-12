@@ -17,4 +17,12 @@ export const EXAM_ROUTES: Routes = [
       ),
     title: 'Uttirno · Mock exam',
   },
+  {
+    path: ':id/result',
+    loadComponent: () =>
+      import('./exam-result-page/exam-result-page').then(
+        (m) => m.ExamResultPage,
+      ),
+    title: 'Uttirno · Result',
+  },
 ];

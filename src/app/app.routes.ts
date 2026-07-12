@@ -44,7 +44,15 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/exam/exam.routes').then((m) => m.EXAM_ROUTES),
   },
-  // /history lands with its feature (portion C).
+  {
+    path: 'history',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/history/history-page/history-page').then(
+        (m) => m.HistoryPage,
+      ),
+    title: 'Uttirno · History',
+  },
   {
     path: 'admin',
     canActivate: [adminGuard],

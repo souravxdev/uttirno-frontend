@@ -1,0 +1,70 @@
+<div class="mx-auto max-w-3xl space-y-4 md:space-y-6">
+  <app-page-header
+    [title]="i18n.t().history.title"
+    [subtitle]="i18n.t().history.subtitle"
+  />
+
+  @if (store.loading()) {
+    <div class="space-y-3">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="skeleton h-20"></div>
+      }
+    </div>
+  } @else if (store.items().length === 0) {
+    <div class="card">
+      <app-empty-state
+        [title]="i18n.t().history.emptyTitle"
+        [message]="i18n.t().history.emptyMessage"
+      >
+        <a app-btn routerLink="/exam">{{ i18n.t().exam.start }}</a>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (s of store.items(); track s.id) {
+        <div class="card flex items-center justify-between gap-3 p-4">
+          <div class="min-w-0">
+            <p class="text-sm font-medium">{{ date(s.createdAt) }}</p>
+            <p class="mt-0.5 text-xs text-slate-500">
+              {{ s.questionCount }} {{ i18n.t().common.questionsShort }} ·
+              {{ minutes(s.timeLimitSec) }} {{ i18n.t().common.minutesShort }}
+            </p>
+          </div>
+          <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <app-badge [tone]="sessionStatusTone(s.status)">
+              {{ i18n.t().sessionStatus[s.status] }}
+            </app-badge>
+            @if (s.score !== null) {
+              <span class="text-base font-semibold tabular-nums">
+                {{ s.score }}
+              </span>
+            }
+            @if (s.status === 'SUBMITTED' || s.status === 'EXPIRED') {
+              <a
+                app-btn
+                variant="ghost"
+                size="sm"
+                [routerLink]="['/exam', s.id, 'result']"
+              >
+                {{ i18n.t().results.title }}
+              </a>
+            } @else {
+              <a app-btn size="sm" [routerLink]="['/exam', s.id]">
+                {{ i18n.t().history.resume }}
+              </a>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (store.total() > store.pageSize()) {
+      <app-pagination
+        [page]="store.page()"
+        [pageSize]="store.pageSize()"
+        [total]="store.total()"
+        (pageChange)="store.setPage($event)"
+      />
+    }
+  }
+</div>

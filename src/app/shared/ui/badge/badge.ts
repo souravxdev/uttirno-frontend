@@ -8,6 +8,7 @@ import type {
   QuestionDifficulty,
   QuestionSourceType,
   QuestionStatus,
+  SessionStatus,
 } from '../../../core/api/api.types';
 import type { BadgeTone } from '../ui.models';
 
@@ -43,6 +44,19 @@ export function sourceTypeTone(sourceType: QuestionSourceType): BadgeTone {
     : sourceType === 'PAST_PAPER'
       ? 'sky'
       : 'slate';
+}
+
+export function sessionStatusTone(status: SessionStatus): BadgeTone {
+  switch (status) {
+    case 'SUBMITTED':
+      return 'emerald';
+    case 'IN_PROGRESS':
+      return 'amber';
+    case 'EXPIRED':
+      return 'rose';
+    default:
+      return 'slate';
+  }
 }
 
 @Component({
