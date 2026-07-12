@@ -11,7 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Service health and version */
+        /** Service health, version and DB connectivity */
         get: operations["HealthController_getHealth"];
         put?: never;
         post?: never;
@@ -27,15 +27,22 @@ export interface components {
     schemas: {
         HealthResponseDto: {
             /**
-             * @description Service liveness indicator
+             * @description 'ok' when all dependencies are reachable
              * @example ok
+             * @enum {string}
              */
-            status: string;
+            status: "ok" | "degraded";
             /**
              * @description API version (from package.json)
              * @example 0.0.1
              */
             version: string;
+            /**
+             * @description Database connectivity (SELECT 1 probe)
+             * @example up
+             * @enum {string}
+             */
+            db: "up" | "down";
         };
     };
     responses: never;
