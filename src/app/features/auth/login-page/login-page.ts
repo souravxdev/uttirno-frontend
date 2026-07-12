@@ -36,6 +36,9 @@ export class LoginPage {
     password: ['', [Validators.required]],
   });
 
+  protected readonly returnUrl =
+    this.route.snapshot.queryParamMap.get('returnUrl');
+
   private readonly status = toSignal(this.form.statusChanges, {
     initialValue: this.form.status,
   });

@@ -10,6 +10,8 @@ import {
 import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { AppButton } from '../button/button';
 
+let dialogSeq = 0;
+
 /**
  * Confirmation dialog on the native <dialog> element — focus trap, Esc
  * and backdrop dismiss come for free. Callers hold a template ref and
@@ -29,6 +31,8 @@ export class AppConfirmDialog {
   readonly confirmLabel = input.required<string>();
   readonly danger = input(true);
   readonly confirmed = output<void>();
+
+  protected readonly titleId = `confirm-dialog-title-${dialogSeq++}`;
 
   private readonly dlg =
     viewChild.required<ElementRef<HTMLDialogElement>>('dlg');

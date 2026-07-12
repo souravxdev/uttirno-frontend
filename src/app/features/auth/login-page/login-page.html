@@ -52,6 +52,7 @@
       {{ i18n.t().auth.noAccount }}
       <a
         routerLink="/auth/register"
+        [queryParams]="returnUrl ? { returnUrl } : {}"
         class="font-medium text-primary-700 hover:underline"
       >
         {{ i18n.t().nav.register }}

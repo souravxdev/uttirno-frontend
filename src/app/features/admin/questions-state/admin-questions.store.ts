@@ -30,6 +30,7 @@ interface AdminQuestionsState {
   pageSize: number;
   filters: QuestionsFilters;
   loading: boolean;
+  loadError: boolean;
 }
 
 /** Root-provided so list filters survive admin tab switches. */
@@ -42,6 +43,7 @@ export const AdminQuestionsStore = signalStore(
     pageSize: 20,
     filters: {},
     loading: false,
+    loadError: false,
   }),
   withComputed(({ filters }) => ({
     activeFilterCount: computed(
@@ -55,7 +57,7 @@ export const AdminQuestionsStore = signalStore(
 
     const load = rxMethod<void>(
       pipe(
-        tap(() => patchState(store, { loading: true })),
+        tap(() => patchState(store, { loading: true, loadError: false })),
         switchMap(() =>
           questionsApi
             .list({
@@ -67,7 +69,7 @@ export const AdminQuestionsStore = signalStore(
               tap({
                 next: (res) =>
                   patchState(store, { items: res.items, total: res.total }),
-                error: () => toast.error(i18n.t().common.somethingWrong),
+                error: () => patchState(store, { loadError: true }),
               }),
               catchError(() => EMPTY),
               finalize(() => patchState(store, { loading: false })),

@@ -3,9 +3,7 @@ import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { EMPTY, catchError, finalize, pipe, switchMap, tap } from 'rxjs';
 import type { Dto } from '../../../core/api/api.types';
-import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { SessionsService } from '../../../core/sessions/sessions-state/sessions.service';
-import { ToastStore } from '../../../shared/ui/toast-state/toast.store';
 
 interface HistoryState {
   items: Dto<'SessionSummaryDto'>[];
@@ -13,6 +11,7 @@ interface HistoryState {
   page: number;
   pageSize: number;
   loading: boolean;
+  loadError: boolean;
 }
 
 /** Root-provided so the page position survives navigation. */
@@ -24,21 +23,20 @@ export const HistoryStore = signalStore(
     page: 1,
     pageSize: 10,
     loading: false,
+    loadError: false,
   }),
   withMethods((store) => {
     const sessionsApi = inject(SessionsService);
-    const toast = inject(ToastStore);
-    const i18n = inject(LanguageStore);
 
     const load = rxMethod<void>(
       pipe(
-        tap(() => patchState(store, { loading: true })),
+        tap(() => patchState(store, { loading: true, loadError: false })),
         switchMap(() =>
           sessionsApi.history(store.page(), store.pageSize()).pipe(
             tap({
               next: (res) =>
                 patchState(store, { items: res.items, total: res.total }),
-              error: () => toast.error(i18n.t().common.somethingWrong),
+              error: () => patchState(store, { loadError: true }),
             }),
             catchError(() => EMPTY),
             finalize(() => patchState(store, { loading: false })),

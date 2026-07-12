@@ -66,6 +66,7 @@
       {{ i18n.t().auth.haveAccount }}
       <a
         routerLink="/auth/login"
+        [queryParams]="returnUrl ? { returnUrl } : {}"
         class="font-medium text-primary-700 hover:underline"
       >
         {{ i18n.t().nav.signIn }}

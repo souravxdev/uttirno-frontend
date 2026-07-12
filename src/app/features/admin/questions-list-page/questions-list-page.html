@@ -161,6 +161,17 @@
         <div class="skeleton h-24 md:h-16"></div>
       }
     </div>
+  } @else if (store.loadError()) {
+    <div class="card">
+      <app-empty-state
+        [title]="i18n.t().common.somethingWrong"
+        [message]="i18n.t().common.loadFailed"
+      >
+        <button app-btn variant="secondary" (click)="store.load()">
+          {{ i18n.t().common.retry }}
+        </button>
+      </app-empty-state>
+    </div>
   } @else if (store.items().length === 0) {
     <div class="card">
       <app-empty-state

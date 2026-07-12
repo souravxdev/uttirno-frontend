@@ -12,7 +12,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../core/auth/auth-state/auth.store';
 import { LanguageStore } from '../../../core/i18n/i18n-state/language.store';
 import { AppButton } from '../../../shared/ui/button/button';
@@ -28,6 +28,7 @@ export class RegisterPage {
   protected readonly i18n = inject(LanguageStore);
   protected readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(NonNullableFormBuilder);
 
   protected readonly form = this.fb.group({
@@ -35,6 +36,9 @@ export class RegisterPage {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
+
+  protected readonly returnUrl =
+    this.route.snapshot.queryParamMap.get('returnUrl');
 
   private readonly status = toSignal(this.form.statusChanges, {
     initialValue: this.form.status,
@@ -60,7 +64,11 @@ export class RegisterPage {
   constructor() {
     this.auth.clearError();
     effect(() => {
-      if (this.auth.isLoggedIn()) void this.router.navigateByUrl('/');
+      if (!this.auth.isLoggedIn()) return;
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+      void this.router.navigateByUrl(
+        returnUrl?.startsWith('/') ? returnUrl : '/',
+      );
     });
   }
 

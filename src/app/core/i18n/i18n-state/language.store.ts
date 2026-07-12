@@ -3,6 +3,7 @@ import {
   patchState,
   signalStore,
   withComputed,
+  withHooks,
   withMethods,
   withState,
 } from '@ngrx/signals';
@@ -29,4 +30,11 @@ export const LanguageStore = signalStore(
       patchState(store, { lang });
     },
   })),
+  withHooks({
+    onInit(store) {
+      // Reflect the persisted language on <html lang> at startup, not just
+      // on toggle — assistive tech and font selection rely on it.
+      document.documentElement.lang = store.lang();
+    },
+  }),
 );
