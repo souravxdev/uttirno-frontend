@@ -1,0 +1,3 @@
+# Generated API client — derived from uttirno-backend/openapi/openapi.json.
+# Never edit by hand; regenerate with `pnpm api:generate`.
+src/app/api/generated/** linguist-generated=true

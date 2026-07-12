@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Latin text renders with system fonts; Bangla glyphs fall through to
+     Noto Sans Bengali (loaded in index.html). */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Noto Sans Bengali', sans-serif;
+}
